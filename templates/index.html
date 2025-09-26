@@ -4,11 +4,39 @@
     <meta charset="UTF-8">
     <title>Generador de Carteles</title>
     <style>
-        /* (Los estilos son muy parecidos a los de antes, con pequeños ajustes) */
+        /* Declaramos la fuente */
         @font-face { font-family: 'MiFuentePersonalizada'; src: url('/static/ARIBLK.TTF'); }
-        body { font-family: sans-serif; margin: 0; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .app-container { display: flex; gap: 40px; align-items: flex-start; padding: 20px; }
-        .form-box { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 400px; }
+        
+        body { 
+            font-family: sans-serif; 
+            margin: 0;
+            /* --- ¡FONDO REINCORPORADO! --- */
+            background-image: url('/static/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .app-container { 
+            display: flex; 
+            gap: 40px; 
+            align-items: flex-start; 
+            padding: 20px; 
+            /* Añadimos esto para centrar el contenedor principal */
+            width: 100%;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .form-box { 
+            background: rgba(255, 255, 255, 0.9); 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            text-align: center; 
+            width: 400px; 
+        }
         .preview-box { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h1 { margin-top: 0; color: #333; }
         textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; margin-bottom: 1rem; }
@@ -19,24 +47,30 @@
         .gallery-button { background-color: #28a745; }
         #previewCanvas { width: 600px; height: auto; border: 1px solid #ccc; }
         #printFrame { display: none; }
+
+        /* --- ¡LOGO REINCORPORADO! --- */
+        .logo-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="form-box">
             <h1>Generador de Carteles</h1>
-            <!-- Este formulario ahora tiene un nombre para que JS lo pueda encontrar -->
             <form id="generatorForm" action="/generar" method="POST">
                 <label for="texto_cartel">Escribe tu texto:</label><br><br>
                 <textarea id="texto_cartel" name="texto" required></textarea>
-                
-                <!-- Un campo oculto para decirle a Python qué queremos hacer -->
                 <input type="hidden" id="actionInput" name="accion" value="">
-
                 <div class="actions-container">
-                    <!-- Botón para GUARDAR (funciona como un submit normal) -->
                     <button type="submit" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
-                    <!-- Botón para IMPRIMIR (controlado por JavaScript) -->
                     <button type="button" id="printButton">Imprimir</button>
                 </div>
             </form>
@@ -48,10 +82,13 @@
         </div>
     </div>
 
-    <iframe id="printFrame" name="printFrame"></iframe>
+    <!-- Contenedor del Logo -->
+    <div class="logo-container">
+        <img src="/static/logo.jpg" alt="Logo CEVA Logistics">
+    </div>
 
     <script>
-        // (El código de la previsualización no cambia)
+        // (El código JavaScript no necesita ningún cambio)
         const FONT_SIZE = 250; const FONT_NAME = 'MiFuentePersonalizada'; const LINE_SPACING = 30; const TEXT_COLOR = 'black';
         const textArea = document.getElementById('texto_cartel'); const canvas = document.getElementById('previewCanvas'); const ctx = canvas.getContext('2d');
         const plantillaImage = new Image(); plantillaImage.src = '/static/plantilla.png';
@@ -59,23 +96,17 @@
         textArea.addEventListener('input', drawPreview);
         function drawPreview() { const text = textArea.value.toUpperCase(); ctx.drawImage(plantillaImage, 0, 0); ctx.fillStyle = TEXT_COLOR; ctx.font = `${FONT_SIZE}px ${FONT_NAME}`; ctx.textAlign = 'center'; const lines = text.split('\n'); const totalTextHeight = (lines.length * FONT_SIZE) + ((lines.length - 1) * LINE_SPACING); let startY = (canvas.height - totalTextHeight) / 2 + (FONT_SIZE / 2); for (let i = 0; i < lines.length; i++) { const line = lines[i]; const y = startY + (i * (FONT_SIZE + LINE_SPACING)); ctx.fillText(line, canvas.width / 2, y); } }
 
-        // --- Lógica para los dos botones ---
         const form = document.getElementById('generatorForm');
         const actionInput = document.getElementById('actionInput');
         const printButton = document.getElementById('printButton');
         const printFrame = document.getElementById('printFrame');
 
-        // Función para el botón GUARDAR
         function setAction(action) {
             actionInput.value = action;
         }
 
-        // Función para el botón IMPRIMIR
         printButton.addEventListener('click', function() {
-            // Ponemos el indicador de 'imprimir'
             setAction('imprimir');
-            
-            // Usamos fetch para obtener el PDF para imprimir
             const formData = new FormData(form);
             fetch('/generar', {
                 method: 'POST',
@@ -95,6 +126,5 @@
             });
         });
     </script>
-
 </body>
 </html>
