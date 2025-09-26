@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Galería de Carteles</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; }
+        .header { text-align: center; padding: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
+        .search-form input { font-size: 1rem; padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
+        .search-form button { font-size: 1rem; padding: 8px 15px; }
+        .gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .thumbnail { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .thumbnail img { max-width: 300px; height: auto; display: block; }
+        .thumbnail p { margin-top: 10px; font-size: 0.9em; word-break: break-all; max-width: 300px; }
+        .home-button { font-size: 1rem; padding: 10px 20px; color: white; background-color: #007bff; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; margin-bottom: 15px; display: inline-block;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="home-button">Crear Nuevo Cartel</a>
+        <h1>Galería de Carteles</h1>
+        <form action="/galeria" method="GET" class="search-form">
+            <input type="search" name="q" placeholder="Buscar por texto del cartel..." value="{{ search_query or '' }}">
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <div class="gallery-container">
+        {% for cartel in carteles %}
+            <div class="thumbnail">
+                <a href="{{ url_for('static', filename='generados/' + cartel) }}" target="_blank">
+                    <img src="{{ url_for('static', filename='generados/' + cartel) }}" alt="{{ cartel }}">
+                </a>
+                <p>{{ cartel.replace('_', ' ').replace('.png', '') }}</p>
+            </div>
+        {% else %}
+            <p>No se encontraron carteles. ¡Prueba con otra búsqueda o crea uno nuevo!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

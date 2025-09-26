@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Carteles</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 90vh; background-color: #f0f2f5; margin: 0; }
+        .container { background: white; padding: 2rem 3rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        h1 { margin-top: 0; }
+        input[type="text"] { font-size: 1rem; padding: 10px; width: 300px; margin-bottom: 1.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        button { background-color: #007bff; }
+        button:hover { background-color: #0056b3; }
+        .gallery-button { background-color: #28a745; margin-top: 1rem; }
+        .gallery-button:hover { background-color: #218838; }
+        .separator { margin: 20px 0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generador de Carteles</h1>
+        <form action="/generar" method="POST">
+            <label for="texto_cartel">Texto para el nuevo cartel:</label><br><br>
+            <input type="text" id="texto_cartel" name="texto" required autocomplete="off">
+            <br><br>
+            <button type="submit">Generar PDF</button>
+        </form>
+        <div class="separator">O</div>
+        <a href="/galeria" class="gallery-button">Ver Galería de Carteles</a>
+    </div>
+</body>
+</html>
