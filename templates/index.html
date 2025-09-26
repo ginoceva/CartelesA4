@@ -4,50 +4,20 @@
     <meta charset="UTF-8">
     <title>Generador de Carteles</title>
     <style>
-        body { 
-            font-family: sans-serif; 
-            margin: 0;
-            /* --- ESTILOS DEL FONDO --- */
-            background-image: url('/static/background.png');
-            background-size: cover; /* Cubre toda la pantalla */
-            background-position: center; /* Centra la imagen */
-            background-repeat: no-repeat; /* No repite la imagen */
-            background-attachment: fixed; /* Mantiene el fondo fijo al hacer scroll */
-        }
-        .main-container {
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; /* Ocupa toda la altura de la pantalla */
-        }
-        .form-box { 
-            background: rgba(255, 255, 255, 0.9); /* Fondo blanco semitransparente */
-            padding: 2rem 3rem; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-            text-align: center; 
-        }
+        body { font-family: sans-serif; margin: 0; background-image: url('/static/background.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
+        .main-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+        .form-box { background: rgba(255, 255, 255, 0.9); padding: 2rem 3rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; }
         h1 { margin-top: 0; color: #333; }
-        input[type="text"] { font-size: 1rem; padding: 10px; width: 300px; margin-bottom: 1.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        /* --- CAMBIO CLAVE: Estilos para el textarea --- */
+        textarea { font-size: 1rem; padding: 10px; width: 350px; height: 100px; margin-bottom: 1.5rem; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; }
         button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
         button { background-color: #007bff; }
         button:hover { background-color: #0056b3; }
         .gallery-button { background-color: #28a745; margin-top: 1rem; }
         .gallery-button:hover { background-color: #218838; }
         .separator { margin: 20px 0; font-weight: bold; color: #555; }
-        
-        /* --- ESTILOS DEL LOGO --- */
-        .logo-container {
-            position: fixed; /* Fija el logo en la pantalla */
-            bottom: 20px;    /* 20px desde abajo */
-            right: 20px;     /* 20px desde la derecha */
-            z-index: 1000;   /* Se asegura que esté por encima de otros elementos */
-        }
-        .logo-container img {
-            max-width: 150px; /* Ancho máximo del logo, ¡puedes cambiar este valor! */
-            height: auto;
-        }
+        .logo-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .logo-container img { max-width: 150px; height: auto; }
     </style>
 </head>
 <body>
@@ -55,8 +25,9 @@
         <div class="form-box">
             <h1>Generador de Carteles</h1>
             <form action="/generar" method="POST">
-                <label for="texto_cartel">Texto para el nuevo cartel:</label><br><br>
-                <input type="text" id="texto_cartel" name="texto" required autocomplete="off">
+                <label for="texto_cartel">Texto para el nuevo cartel (puedes usar "Enter"):</label><br><br>
+                <!-- --- CAMBIO CLAVE: De <input> a <textarea> --- -->
+                <textarea id="texto_cartel" name="texto" required></textarea>
                 <br><br>
                 <button type="submit">Generar PDF</button>
             </form>
@@ -64,8 +35,6 @@
             <a href="/galeria" class="gallery-button">Ver Galería de Carteles</a>
         </div>
     </div>
-
-    <!-- Contenedor del Logo -->
     <div class="logo-container">
         <img src="/static/logo.jpg" alt="Logo CEVA Logistics">
     </div>

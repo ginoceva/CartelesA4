@@ -4,17 +4,7 @@
     <meta charset="UTF-8">
     <title>Galería de Carteles</title>
     <style>
-        body { 
-            font-family: sans-serif; 
-            margin: 0;
-            padding-bottom: 80px; /* Añade espacio abajo para que el logo no tape el último cartel */
-            /* --- ESTILOS DEL FONDO --- */
-            background-image: url('/static/background.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; padding-bottom: 80px; background-image: url('/static/background.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
         .header { text-align: center; padding: 20px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
         .search-form input { font-size: 1rem; padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
         .search-form button { font-size: 1rem; padding: 8px 15px; }
@@ -23,18 +13,12 @@
         .thumbnail img { max-width: 300px; height: auto; display: block; }
         .thumbnail p { margin-top: 10px; font-size: 0.9em; word-break: break-all; max-width: 300px; }
         .home-button { font-size: 1rem; padding: 10px 20px; color: white; background-color: #007bff; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; margin-bottom: 15px; display: inline-block;}
-        
-        /* --- ESTILOS DEL LOGO --- */
-        .logo-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .logo-container img {
-            max-width: 150px;
-            height: auto;
-        }
+        .logo-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .logo-container img { max-width: 150px; height: auto; }
+        /* --- CAMBIO CLAVE: Estilos para los nuevos botones --- */
+        .actions { margin-top: 10px; display: flex; justify-content: center; gap: 15px; }
+        .action-button { background: none; border: none; cursor: pointer; font-size: 1.5rem; padding: 5px; }
+        .action-link { text-decoration: none; color: inherit; font-size: 1.5rem; }
     </style>
 </head>
 <body>
@@ -46,21 +30,26 @@
             <button type="submit">Buscar</button>
         </form>
     </div>
-
     <div class="gallery-container">
         {% for cartel in carteles %}
             <div class="thumbnail">
                 <a href="{{ url_for('static', filename='generados/' + cartel) }}" target="_blank">
                     <img src="{{ url_for('static', filename='generados/' + cartel) }}" alt="{{ cartel }}">
                 </a>
-                <p>{{ cartel.replace('_', ' ').replace('.png', '') }}</p>
+                <p>{{ cartel.replace('_', ' ').replace('.png', '').split('@')[0] }}</p>
+                <!-- --- CAMBIO CLAVE: Botones de Descargar y Eliminar --- -->
+                <div class="actions">
+                    <a href="/descargar/{{ cartel }}" class="action-link" title="Descargar PNG">⬇️</a>
+                    <form action="/eliminar" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este cartel?');">
+                        <input type="hidden" name="filename" value="{{ cartel }}">
+                        <button type="submit" class="action-button" title="Eliminar Cartel">🗑️</button>
+                    </form>
+                </div>
             </div>
         {% else %}
             <p>No se encontraron carteles. ¡Prueba con otra búsqueda o crea uno nuevo!</p>
         {% endfor %}
     </div>
-
-    <!-- Contenedor del Logo -->
     <div class="logo-container">
         <img src="/static/logo.jpg" alt="Logo CEVA Logistics">
     </div>

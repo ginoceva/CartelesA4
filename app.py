@@ -1,21 +1,22 @@
 import os
 import io
 import re
-import textwrap
-# ¡LA LÍNEA CLAVE A VERIFICAR ES ESTA!
-from PIL import Image, ImageDraw, ImageFont 
-from flask import Flask, render_template, request, send_file
+from datetime import datetime
+# ¡Importamos nuevas herramientas de Flask!
+from flask import Flask, render_template, request, send_file, redirect, url_for 
+from PIL import Image, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.utils import ImageReader
 
 app = Flask(__name__)
 
-# (Las funciones y rutas auxiliares no cambian)
 def limpiar_nombre_archivo(texto):
-    texto = texto.replace(' ', '_')
-    texto = re.sub(r'[^\w-]', '', texto)
-    return texto[:50]
+    # Limpiamos los saltos de línea para el nombre de archivo
+    texto_limpio = texto.replace('\n', ' ').replace('\r', '')
+    texto_limpio = texto_limpio.replace(' ', '_')
+    texto_limpio = re.sub(r'[^\w-]', '', texto_limpio)
+    return texto_limpio[:50]
 
 @app.route('/')
 def pagina_de_inicio():
@@ -28,6 +29,7 @@ def galeria():
     query = request.args.get('q', '').upper()
     lista_completa = sorted(os.listdir(ruta_galeria), reverse=True)
     if query:
+        # La búsqueda ahora también ignora los guiones bajos
         carteles_filtrados = [c for c in lista_completa if query in c.upper().replace('_', ' ')]
     else:
         carteles_filtrados = lista_completa
@@ -35,25 +37,23 @@ def galeria():
 
 @app.route('/generar', methods=['POST'])
 def generar_imagen():
+    # El texto ya viene con los saltos de línea (\n) del textarea
     texto_usuario = request.form['texto'].upper()
     try:
         ruta_plantilla = 'static/plantilla.png'
         imagen = Image.open(ruta_plantilla)
         ancho_img, alto_img = imagen.size
-        
-        # ¡LA LÍNEA CLAVE A VERIFICAR ES ESTA!
         dibujo = ImageDraw.Draw(imagen)
         
-        ruta_fuente = 'static/ARLRDBD.TTF' 
-        tamaño_fuente = 300
+        ruta_fuente = 'static/ARIBLK.TTF' 
+        tamaño_fuente = 250
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         
-        ancho_maximo_caracteres = 20
-        envoltura = textwrap.TextWrapper(width=ancho_maximo_caracteres)
-        lineas = envoltura.wrap(text=texto_usuario)
-        texto_final_multilinea = "\n".join(lineas)
+        # --- CAMBIO CLAVE: Lógica simplificada. Ya no usamos textwrap ---
+        # Simplemente usamos el texto tal como viene del usuario
+        texto_final_multilinea = texto_usuario
         
-        caja_texto = dibujo.multiline_textbbox((0, 0), texto_final_multilinea, font=fuente, align="center", spacing=20)
+        caja_texto = dibujo.multiline_textbbox((0, 0), texto_final_multilinea, font=fuente, align="center", spacing=30)
         alto_total_texto = caja_texto[3] - caja_texto[1]
         pos_y_inicial = (alto_img - alto_total_texto) / 2
         
@@ -64,17 +64,15 @@ def generar_imagen():
             fill="black", 
             anchor="ma",
             align="center",
-            spacing=40
+            spacing=30
         )
         
+        # Guardamos con un timestamp para evitar sobreescrituras y asegurar orden cronológico
         nombre_base = limpiar_nombre_archivo(texto_usuario)
-        nombre_archivo = f"{nombre_base}.png"
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        nombre_archivo = f"{nombre_base}@{timestamp}.png"
         ruta_guardado = os.path.join('static', 'generados', nombre_archivo)
-        contador = 1
-        while os.path.exists(ruta_guardado):
-            nombre_archivo = f"{nombre_base}_{contador}.png"
-            ruta_guardado = os.path.join('static', 'generados', nombre_archivo)
-            contador += 1
+        
         imagen.save(ruta_guardado)
         
         img_io = io.BytesIO()
@@ -90,12 +88,27 @@ def generar_imagen():
         pdf_io.seek(0)
         
         return send_file(pdf_io, mimetype='application/pdf', as_attachment=True, download_name=f'cartel_{nombre_base}.pdf')
-    except FileNotFoundError:
-        return "ERROR CRÍTICO: Asegúrate de que los archivos 'plantilla.png' y 'ARLRDBD.TTF' existen en la carpeta 'static'.", 500
-    except OSError:
-         return "ERROR DE FUENTE: No se pudo cargar el archivo de fuente. Asegúrate de que no esté corrupto.", 500
+
     except Exception as e:
         return f"Ha ocurrido un error inesperado: {str(e)}", 500
+
+# --- NUEVA RUTA: Para descargar las imágenes desde la galería ---
+@app.route('/descargar/<path:filename>')
+def descargar(filename):
+    ruta_galeria = os.path.join('static', 'generados')
+    return send_file(os.path.join(ruta_galeria, filename), as_attachment=True)
+
+# --- NUEVA RUTA: Para eliminar imágenes de forma segura ---
+@app.route('/eliminar', methods=['POST'])
+def eliminar():
+    filename = request.form.get('filename')
+    if filename:
+        ruta_archivo = os.path.join('static', 'generados', filename)
+        # Doble chequeo de seguridad: nos aseguramos de no salir de la carpeta 'generados'
+        if os.path.exists(ruta_archivo) and os.path.dirname(os.path.abspath(ruta_archivo)).endswith('generados'):
+            os.remove(ruta_archivo)
+    # Redirigimos al usuario de vuelta a la galería
+    return redirect(url_for('galeria'))
 
 if __name__ == '__main__':
     app.run(debug=True)
