@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <title>Galería de Carteles</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; }
-        .header { text-align: center; padding: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
+        body { 
+            font-family: sans-serif; 
+            margin: 0;
+            padding-bottom: 80px; /* Añade espacio abajo para que el logo no tape el último cartel */
+            /* --- ESTILOS DEL FONDO --- */
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .header { text-align: center; padding: 20px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
         .search-form input { font-size: 1rem; padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
         .search-form button { font-size: 1rem; padding: 8px 15px; }
         .gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
@@ -13,6 +23,18 @@
         .thumbnail img { max-width: 300px; height: auto; display: block; }
         .thumbnail p { margin-top: 10px; font-size: 0.9em; word-break: break-all; max-width: 300px; }
         .home-button { font-size: 1rem; padding: 10px 20px; color: white; background-color: #007bff; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; margin-bottom: 15px; display: inline-block;}
+        
+        /* --- ESTILOS DEL LOGO --- */
+        .logo-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -36,6 +58,11 @@
         {% else %}
             <p>No se encontraron carteles. ¡Prueba con otra búsqueda o crea uno nuevo!</p>
         {% endfor %}
+    </div>
+
+    <!-- Contenedor del Logo -->
+    <div class="logo-container">
+        <img src="/static/logo.png" alt="Logo CEVA Logistics">
     </div>
 </body>
 </html>
