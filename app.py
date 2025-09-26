@@ -50,7 +50,7 @@ def generar_imagen():
         dibujo = ImageDraw.Draw(imagen)
         
         # Usamos la fuente que hayas elegido
-        ruta_fuente = 'static/tu_fuente.ttf' # <-- ¡ASEGÚRATE DE QUE ESTE NOMBRE SEA CORRECTO!
+        ruta_fuente = 'static/ARIBLK.TTF' # <-- ¡ASEGÚRATE DE QUE ESTE NOMBRE SEA CORRECTO!
         tamaño_fuente = 250
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         
