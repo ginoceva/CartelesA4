@@ -35,26 +35,30 @@ def galeria():
         carteles_filtrados = lista_completa
     return render_template('galeria.html', carteles=carteles_filtrados, search_query=query)
 
+# (El resto de tu app.py, como las importaciones y las otras rutas, no cambia)
+
 @app.route('/generar', methods=['POST'])
 def generar_imagen():
-    # El texto ya viene con los saltos de línea (\n) del textarea
-    texto_usuario = request.form['texto'].upper()
+    # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+    # Limpiamos los saltos de línea de Windows antes de procesar.
+    texto_usuario = request.form['texto'].upper().replace('\r', '')
+
     try:
         ruta_plantilla = 'static/plantilla.png'
         imagen = Image.open(ruta_plantilla)
         ancho_img, alto_img = imagen.size
         dibujo = ImageDraw.Draw(imagen)
         
-        ruta_fuente = 'static/ARIBLK.TTF' 
+        # Usamos la fuente que hayas elegido
+        ruta_fuente = 'static/tu_fuente.ttf' # <-- ¡ASEGÚRATE DE QUE ESTE NOMBRE SEA CORRECTO!
         tamaño_fuente = 250
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         
-        # --- CAMBIO CLAVE: Lógica simplificada. Ya no usamos textwrap ---
-        # Simplemente usamos el texto tal como viene del usuario
         texto_final_multilinea = texto_usuario
         
         caja_texto = dibujo.multiline_textbbox((0, 0), texto_final_multilinea, font=fuente, align="center", spacing=30)
         alto_total_texto = caja_texto[3] - caja_texto[1]
+        
         pos_y_inicial = (alto_img - alto_total_texto) / 2
         
         dibujo.multiline_text(
@@ -67,7 +71,7 @@ def generar_imagen():
             spacing=30
         )
         
-        # Guardamos con un timestamp para evitar sobreescrituras y asegurar orden cronológico
+        # (El resto del código para guardar y crear el PDF no cambia)
         nombre_base = limpiar_nombre_archivo(texto_usuario)
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         nombre_archivo = f"{nombre_base}@{timestamp}.png"
@@ -91,6 +95,8 @@ def generar_imagen():
 
     except Exception as e:
         return f"Ha ocurrido un error inesperado: {str(e)}", 500
+
+# (El resto del código como la ruta de descarga, eliminar, etc., no cambia)
 
 # --- NUEVA RUTA: Para descargar las imágenes desde la galería ---
 @app.route('/descargar/<path:filename>')
