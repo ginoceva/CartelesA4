@@ -45,7 +45,7 @@ def generar_imagen():
         dibujo = ImageDraw.Draw(imagen)
         
         ruta_fuente = 'static/ARLRDBD.TTF' 
-        tamaño_fuente = 250
+        tamaño_fuente = 300
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         
         ancho_maximo_caracteres = 20
@@ -64,7 +64,7 @@ def generar_imagen():
             fill="black", 
             anchor="ma",
             align="center",
-            spacing=20
+            spacing=40
         )
         
         nombre_base = limpiar_nombre_archivo(texto_usuario)
