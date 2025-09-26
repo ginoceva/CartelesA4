@@ -37,46 +37,35 @@ def galeria():
 
 # (El resto de tu app.py, como las importaciones y las otras rutas, no cambia)
 
+# (El resto de tu app.py, como las importaciones y las otras rutas, no cambia)
+
 @app.route('/generar', methods=['POST'])
 def generar_imagen():
-    # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-    # Limpiamos los saltos de línea de Windows antes de procesar.
     texto_usuario = request.form['texto'].upper().replace('\r', '')
+    
+    # --- ¡NUEVO! Detectamos qué botón se presionó ---
+    # Miramos si el formulario envió un dato llamado 'accion' con el valor 'imprimir'
+    accion_imprimir = request.form.get('accion') == 'imprimir'
 
     try:
+        # (TODA LA LÓGICA DE CREACIÓN DE IMAGEN Y PDF NO CAMBIA)
         ruta_plantilla = 'static/plantilla.png'
         imagen = Image.open(ruta_plantilla)
         ancho_img, alto_img = imagen.size
         dibujo = ImageDraw.Draw(imagen)
-        
-        # Usamos la fuente que hayas elegido
-        ruta_fuente = 'static/ARIBLK.TTF' # <-- ¡ASEGÚRATE DE QUE ESTE NOMBRE SEA CORRECTO!
+        ruta_fuente = 'static/ARIBLK.TTF' # Asegúrate que es tu fuente
         tamaño_fuente = 250
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
-        
         texto_final_multilinea = texto_usuario
-        
         caja_texto = dibujo.multiline_textbbox((0, 0), texto_final_multilinea, font=fuente, align="center", spacing=30)
         alto_total_texto = caja_texto[3] - caja_texto[1]
-        
         pos_y_inicial = (alto_img - alto_total_texto) / 2
+        dibujo.multiline_text((ancho_img / 2, pos_y_inicial), texto_final_multilinea, font=fuente, fill="black", anchor="ma", align="center", spacing=30)
         
-        dibujo.multiline_text(
-            (ancho_img / 2, pos_y_inicial), 
-            texto_final_multilinea, 
-            font=fuente, 
-            fill="black", 
-            anchor="ma",
-            align="center",
-            spacing=30
-        )
-        
-        # (El resto del código para guardar y crear el PDF no cambia)
         nombre_base = limpiar_nombre_archivo(texto_usuario)
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         nombre_archivo = f"{nombre_base}@{timestamp}.png"
         ruta_guardado = os.path.join('static', 'generados', nombre_archivo)
-        
         imagen.save(ruta_guardado)
         
         img_io = io.BytesIO()
@@ -91,12 +80,22 @@ def generar_imagen():
         c.save()
         pdf_io.seek(0)
         
-        return send_file(pdf_io, mimetype='application/pdf', as_attachment=True, download_name=f'cartel_{nombre_base}.pdf')
+        # --- ¡AQUÍ ESTÁ EL CAMBIO! ---
+        # Si la acción es imprimir, no forzamos la descarga.
+        # Si no, forzamos la descarga como antes.
+        forzar_descarga = not accion_imprimir
 
+        return send_file(
+            pdf_io,
+            mimetype='application/pdf',
+            as_attachment=forzar_descarga, # <-- Usamos nuestra variable
+            download_name=f'cartel_{nombre_base}.pdf'
+        )
     except Exception as e:
         return f"Ha ocurrido un error inesperado: {str(e)}", 500
 
-# (El resto del código como la ruta de descarga, eliminar, etc., no cambia)
+# (El resto del código de app.py no cambia)
+
 
 # --- NUEVA RUTA: Para descargar las imágenes desde la galería ---
 @app.route('/descargar/<path:filename>')
