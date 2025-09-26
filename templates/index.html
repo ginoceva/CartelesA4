@@ -2,41 +2,144 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Generador de Carteles</title>
+    <title>Generador de Carteles con Previsualización</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background-image: url('/static/background.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
-        .main-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
-        .form-box { background: rgba(255, 255, 255, 0.9); padding: 2rem 3rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; }
+        /* Declaramos la fuente */
+        @font-face {
+            font-family: 'MiFuentePersonalizada';
+            src: url('/static/ARIBLK.TTF'); /* Asegúrate que es tu fuente correcta */
+        }
+
+        body { 
+            font-family: sans-serif; 
+            margin: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .form-box { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            text-align: center; 
+            width: 400px;
+        }
+        .preview-box {
+            background: white; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
         h1 { margin-top: 0; color: #333; }
-        /* --- CAMBIO CLAVE: Estilos para el textarea --- */
-        textarea { font-size: 1rem; padding: 10px; width: 350px; height: 100px; margin-bottom: 1.5rem; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; }
-        button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        textarea { 
+            font-size: 1rem; 
+            padding: 10px; 
+            width: 95%; 
+            height: 120px; 
+            margin-bottom: 1.5rem; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            font-family: sans-serif; 
+            resize: vertical; 
+        }
+        button, .gallery-button { 
+            font-size: 1rem; 
+            padding: 10px 20px; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
+        }
         button { background-color: #007bff; }
-        button:hover { background-color: #0056b3; }
+        /* --- ¡NUEVOS ESTILOS REINCORPORADOS! --- */
         .gallery-button { background-color: #28a745; margin-top: 1rem; }
         .gallery-button:hover { background-color: #218838; }
         .separator { margin: 20px 0; font-weight: bold; color: #555; }
-        .logo-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
-        .logo-container img { max-width: 150px; height: auto; }
+        #previewCanvas {
+            width: 600px;
+            height: auto;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
-    <div class="main-container">
+
+    <div class="app-container">
+        
         <div class="form-box">
             <h1>Generador de Carteles</h1>
             <form action="/generar" method="POST">
-                <label for="texto_cartel">Texto para el nuevo cartel (puedes usar "Enter"):</label><br><br>
-                <!-- --- CAMBIO CLAVE: De <input> a <textarea> --- -->
+                <label for="texto_cartel">Escribe tu texto (puedes usar "Enter"):</label><br><br>
                 <textarea id="texto_cartel" name="texto" required></textarea>
                 <br><br>
-                <button type="submit">Generar PDF</button>
+                <button type="submit">Generar PDF Final</button>
             </form>
+            
+            <!-- --- ¡ELEMENTOS REINCORPORADOS! --- -->
             <div class="separator">O</div>
             <a href="/galeria" class="gallery-button">Ver Galería de Carteles</a>
         </div>
+
+        <div class="preview-box">
+            <h2>Previsualización en Vivo</h2>
+            <canvas id="previewCanvas"></canvas>
+        </div>
+
     </div>
-    <div class="logo-container">
-        <img src="/static/logo.jpg" alt="Logo CEVA Logistics">
-    </div>
+
+    <script>
+        // --- TODO EL CÓDIGO JAVASCRIPT PERMANECE EXACTAMENTE IGUAL ---
+        const FONT_SIZE = 250;
+        const FONT_NAME = 'MiFuentePersonalizada';
+        const LINE_SPACING = 30;
+        const TEXT_COLOR = 'black';
+        
+        const textArea = document.getElementById('texto_cartel');
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const plantillaImage = new Image();
+        plantillaImage.src = '/static/plantilla.png';
+        
+        plantillaImage.onload = function() {
+            canvas.width = plantillaImage.width;
+            canvas.height = plantillaImage.height;
+            drawPreview(); 
+        };
+
+        textArea.addEventListener('input', function() {
+            drawPreview();
+        });
+
+        function drawPreview() {
+            const text = textArea.value.toUpperCase();
+            ctx.drawImage(plantillaImage, 0, 0);
+            ctx.fillStyle = TEXT_COLOR;
+            ctx.font = `${FONT_SIZE}px ${FONT_NAME}`;
+            ctx.textAlign = 'center';
+            
+            const lines = text.split('\n');
+            const totalTextHeight = (lines.length * FONT_SIZE) + ((lines.length - 1) * LINE_SPACING);
+            let startY = (canvas.height - totalTextHeight) / 2 + (FONT_SIZE / 2);
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const y = startY + (i * (FONT_SIZE + LINE_SPACING));
+                ctx.fillText(line, canvas.width / 2, y);
+            }
+        }
+    </script>
+
 </body>
 </html>
