@@ -10,7 +10,6 @@
         body { 
             font-family: sans-serif; 
             margin: 0;
-            /* --- ¡FONDO REINCORPORADO! --- */
             background-image: url('/static/background.png');
             background-size: cover;
             background-position: center;
@@ -22,7 +21,6 @@
             gap: 40px; 
             align-items: flex-start; 
             padding: 20px; 
-            /* Añadimos esto para centrar el contenedor principal */
             width: 100%;
             min-height: 100vh;
             justify-content: center;
@@ -40,25 +38,18 @@
         .preview-box { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h1 { margin-top: 0; color: #333; }
         textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; margin-bottom: 1rem; }
+        
+        /* --- ESTILOS PARA LOS BOTONES --- */
         .actions-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
         button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-        #saveButton { background-color: #17a2b8; }
-        #printButton { background-color: #007bff; }
-        .gallery-button { background-color: #28a745; }
+        #saveButton { background-color: #17a2b8; } /* Color cian para Guardar */
+        #printButton { background-color: #007bff; } /* Color azul para Imprimir */
+        .gallery-button { background-color: #28a745; } /* Color verde para Galería */
+        
         #previewCanvas { width: 600px; height: auto; border: 1px solid #ccc; }
         #printFrame { display: none; }
-
-        /* --- ¡LOGO REINCORPORADO! --- */
-        .logo-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .logo-container img {
-            max-width: 150px;
-            height: auto;
-        }
+        .logo-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .logo-container img { max-width: 150px; height: auto; }
     </style>
 </head>
 <body>
@@ -69,6 +60,8 @@
                 <label for="texto_cartel">Escribe tu texto:</label><br><br>
                 <textarea id="texto_cartel" name="texto" required></textarea>
                 <input type="hidden" id="actionInput" name="accion" value="">
+
+                <!-- --- ¡ESTRUCTURA DE BOTONES CORREGIDA! --- -->
                 <div class="actions-container">
                     <button type="submit" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
                     <button type="button" id="printButton">Imprimir</button>
@@ -88,7 +81,7 @@
     </div>
 
     <script>
-        // (El código JavaScript no necesita ningún cambio)
+        // (El código JavaScript no necesita ningún cambio, ya está preparado para ambos botones)
         const FONT_SIZE = 250; const FONT_NAME = 'MiFuentePersonalizada'; const LINE_SPACING = 30; const TEXT_COLOR = 'black';
         const textArea = document.getElementById('texto_cartel'); const canvas = document.getElementById('previewCanvas'); const ctx = canvas.getContext('2d');
         const plantillaImage = new Image(); plantillaImage.src = '/static/plantilla.png';
