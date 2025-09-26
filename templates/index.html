@@ -39,15 +39,13 @@
         h1 { margin-top: 0; color: #333; }
         textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; margin-bottom: 1rem; }
         
-        /* --- ESTILOS PARA LOS BOTONES --- */
         .actions-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
         button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-        #saveButton { background-color: #17a2b8; } /* Color cian para Guardar */
-        #printButton { background-color: #007bff; } /* Color azul para Imprimir */
-        .gallery-button { background-color: #28a745; } /* Color verde para Galería */
+        #saveButton { background-color: #17a2b8; }
+        #printButton { background-color: #007bff; }
+        .gallery-button { background-color: #28a745; }
         
         #previewCanvas { width: 600px; height: auto; border: 1px solid #ccc; }
-        #printFrame { display: none; }
         .logo-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
         .logo-container img { max-width: 150px; height: auto; }
     </style>
@@ -60,8 +58,6 @@
                 <label for="texto_cartel">Escribe tu texto:</label><br><br>
                 <textarea id="texto_cartel" name="texto" required></textarea>
                 <input type="hidden" id="actionInput" name="accion" value="">
-
-                <!-- --- ¡ESTRUCTURA DE BOTONES CORREGIDA! --- -->
                 <div class="actions-container">
                     <button type="submit" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
                     <button type="button" id="printButton">Imprimir</button>
@@ -80,8 +76,12 @@
         <img src="/static/logo.jpg" alt="Logo CEVA Logistics">
     </div>
 
+    <!-- ===== ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA! ===== -->
+    <iframe id="printFrame" name="printFrame" style="display: none;"></iframe>
+    <!-- ============================================= -->
+
     <script>
-        // (El código JavaScript no necesita ningún cambio, ya está preparado para ambos botones)
+        // (El código JavaScript no necesita ningún cambio)
         const FONT_SIZE = 250; const FONT_NAME = 'MiFuentePersonalizada'; const LINE_SPACING = 30; const TEXT_COLOR = 'black';
         const textArea = document.getElementById('texto_cartel'); const canvas = document.getElementById('previewCanvas'); const ctx = canvas.getContext('2d');
         const plantillaImage = new Image(); plantillaImage.src = '/static/plantilla.png';
@@ -92,7 +92,7 @@
         const form = document.getElementById('generatorForm');
         const actionInput = document.getElementById('actionInput');
         const printButton = document.getElementById('printButton');
-        const printFrame = document.getElementById('printFrame');
+        const printFrame = document.getElementById('printFrame'); // ¡Ahora sí encontrará este elemento!
 
         function setAction(action) {
             actionInput.value = action;
