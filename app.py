@@ -54,7 +54,7 @@ def generar_imagen():
         ancho_img, alto_img = imagen.size
         dibujo = ImageDraw.Draw(imagen)
         ruta_fuente = 'static/ARIBLK.TTF' # Asegúrate que es tu fuente
-        tamaño_fuente = 250
+        tamaño_fuente = 350
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         texto_final_multilinea = texto_usuario
         caja_texto = dibujo.multiline_textbbox((0, 0), texto_final_multilinea, font=fuente, align="center", spacing=30)
