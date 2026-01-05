@@ -65,30 +65,35 @@
         textArea.addEventListener('input', drawPreview);
 
         // --- ¡AQUÍ ESTÁ LA FUNCIÓN CORREGIDA! ---
+      // --- ¡AQUÍ ESTÁ LA FUNCIÓN CORREGIDA! ---
         function drawPreview() { 
             const text = textArea.value.toUpperCase(); 
             ctx.drawImage(plantillaImage, 0, 0); 
             ctx.fillStyle = TEXT_COLOR; 
             ctx.font = `${FONT_SIZE}px ${FONT_NAME}`; 
-            ctx.textAlign = 'center'; // Centrado Horizontal
+            ctx.textAlign = 'center';
 
-            // --- NUEVO MÉTODO DE CENTRADO VERTICAL ---
-            ctx.textBaseline = 'top'; // Le decimos que la coordenada Y es el borde SUPERIOR del texto
+            // --- MÉTODO DE CENTRADO CORREGIDO CON MARGEN ---
+            ctx.textBaseline = 'top';
 
             const lines = text.split('\n'); 
             
-            // Calculamos la altura total del bloque de texto, incluyendo el interlineado
+            // 1. Definimos el mismo margen inferior que en Python.
+            const bottomMargin = 250; 
+
+            // 2. Calculamos la altura disponible.
+            const availableHeight = canvas.height - bottomMargin;
+            
             const totalTextHeight = (lines.length * FONT_SIZE) + ((lines.length - 1) * LINE_SPACING);
             
-            // Calculamos el punto Y donde debe empezar a dibujarse la PRIMERA línea
-            let startY = (canvas.height - totalTextHeight) / 2;
+            // 3. Centramos el texto DENTRO de la altura disponible.
+            let startY = (availableHeight - totalTextHeight) / 2;
 
             // Iteramos y dibujamos cada línea
             for (let i = 0; i < lines.length; i++) { 
                 const line = lines[i];
-                // La 'y' de cada línea es el inicio + el acumulado de altura de fuente e interlineado
                 const y = startY + (i * (FONT_SIZE + LINE_SPACING));
-                ctx.fillText(line, canvas.width / 2, y); // Dibujamos usando el borde superior
+                ctx.fillText(line, canvas.width / 2, y);
             } 
         }
 
