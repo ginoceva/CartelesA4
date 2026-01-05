@@ -64,7 +64,7 @@ def generar_imagen():
 
         dibujo = ImageDraw.Draw(imagen)
         ruta_fuente = 'static/ARIBLK.TTF' # Asegúrate que es tu fuente
-        tamaño_fuente = 250
+        tamaño_fuente = 300
         fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         texto_final_multilinea = texto_usuario
         
