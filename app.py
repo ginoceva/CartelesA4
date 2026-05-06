@@ -54,17 +54,13 @@ def generar_imagen():
     size_str = request.form.get('size', 'A4')
     orientacion_str = request.form.get('orientation', 'landscape')
     tamaño_fuente = int(request.form.get('font_size', 300))
-    
-    color_texto = request.form.get('text_color', '#000000')
-    es_negrita = request.form.get('is_bold') == 'yes'
-    es_subrayado = request.form.get('is_underline') == 'yes'
+    color_texto_default = request.form.get('text_color', '#000000')
     
     icono_file = request.files.get('icono_file')
 
     try:
         ancho_px, alto_px = PAPER_SIZES_PX.get(size_str, PAPER_SIZES_PX['A4'])
-        if orientacion_str == 'landscape':
-            ancho_px, alto_px = alto_px, ancho_px 
+        if orientacion_str == 'landscape': ancho_px, alto_px = alto_px, ancho_px 
 
         imagen = Image.new("RGBA", (ancho_px, alto_px), "white")
         dibujo = ImageDraw.Draw(imagen)
@@ -96,45 +92,78 @@ def generar_imagen():
             except Exception as e:
                 print(f"Error procesando icono: {e}")
 
-        # --- CORRECCIÓN DE FUENTES (INVERTIDAS) ---
-        ruta_fuente = 'static/ARIBLK.TTF' if es_negrita else 'static/arialbd.ttf'
+        # Carga de fuentes (Normal y Bold)
         try:
-            fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
+            fuente_normal = ImageFont.truetype('static/arialbd.ttf', tamaño_fuente)
+            fuente_negrita = ImageFont.truetype('static/ARIBLK.TTF', tamaño_fuente)
         except IOError:
-            fuente = ImageFont.load_default() 
+            fuente_normal = ImageFont.load_default()
+            fuente_negrita = ImageFont.load_default()
 
         margen_inferior = alto_franja + 50
         altura_disponible = alto_px - margen_inferior - top_offset
-        
-        # --- DIBUJADO LÍNEA POR LÍNEA CON SUBRAYADO ---
         lineas = texto_usuario.split('\n')
         alto_total_texto = (len(lineas) * tamaño_fuente) + ((len(lineas) - 1) * 30)
         pos_y_inicial = top_offset + (altura_disponible - alto_total_texto) / 2
         
+        # --- EL NUEVO MOTOR PARSER DE ETIQUETAS EN PYTHON ---
+        # Expresión regular para encontrar nuestras etiquetas
+        patron_tags = r'(\[B\]|\[/B\]|\[U\]|\[/U\]|\[C=#[0-9A-F]{6}\]|\[/C\])'
+
         for i, linea in enumerate(lineas):
-            y_actual = pos_y_inicial + (i * (tamaño_fuente + 30))
+            partes = re.split(patron_tags, linea)
             
-            dibujo.text(
-                (ancho_px / 2, y_actual), 
-                linea, 
-                font=fuente, 
-                fill=color_texto,
-                anchor="ma" # Centrado arriba
-            )
+            # Estado actual mientras leemos la línea
+            es_negrita = False
+            es_subrayado = False
+            pila_colores = [color_texto_default]
+            tokens = []
 
-            # Si piden subrayado y la línea no está vacía
-            if es_subrayado and linea.strip():
-                ancho_linea = dibujo.textlength(linea, font=fuente)
-                x_inicio = (ancho_px - ancho_linea) / 2
-                x_fin = x_inicio + ancho_linea
-                
-                # Coordenada Y para la línea de subrayado
-                y_subrayado = y_actual + tamaño_fuente * 1.05
-                grosor = max(int(tamaño_fuente * 0.05), 3)
-                
-                dibujo.line([(x_inicio, y_subrayado), (x_fin, y_subrayado)], fill=color_texto, width=grosor)
+            # Leer la línea pedacito a pedacito
+            for parte in partes:
+                if not parte: continue
+                if parte == '[B]': es_negrita = True
+                elif parte == '[/B]': es_negrita = False
+                elif parte == '[U]': es_subrayado = True
+                elif parte == '[/U]': es_subrayado = False
+                elif parte.startswith('[C='): pila_colores.append(parte[3:10])
+                elif parte == '[/C]': 
+                    if len(pila_colores) > 1: pila_colores.pop()
+                else:
+                    tokens.append({
+                        'texto': parte, 
+                        'negrita': es_negrita, 
+                        'subrayado': es_subrayado, 
+                        'color': pila_colores[-1]
+                    })
 
-        nombre_base = limpiar_nombre_archivo(texto_usuario) or "cartel_generado"
+            # 1. Calcular ancho total de la línea
+            ancho_linea = 0
+            for t in tokens:
+                f_actual = fuente_negrita if t['negrita'] else fuente_normal
+                ancho_linea += dibujo.textlength(t['texto'], font=f_actual)
+
+            # 2. Dibujar izquierda a derecha para que quede centrada
+            x_actual = (ancho_px - ancho_linea) / 2
+            y_actual = pos_y_inicial + (i * (tamaño_fuente + 30))
+
+            for t in tokens:
+                f_actual = fuente_negrita if t['negrita'] else fuente_normal
+                ancho_pedazo = dibujo.textlength(t['texto'], font=f_actual)
+                
+                # "la" significa Left-Ascender (dibuja hacia la derecha desde el punto X)
+                dibujo.text((x_actual, y_actual), t['texto'], font=f_actual, fill=t['color'], anchor="la")
+                
+                if t['subrayado'] and t['texto'].strip():
+                    y_subrayado = y_actual + tamaño_fuente * 1.05
+                    grosor = max(int(tamaño_fuente * 0.05), 3)
+                    dibujo.line([(x_actual, y_subrayado), (x_actual + ancho_pedazo, y_subrayado)], fill=t['color'], width=grosor)
+                
+                x_actual += ancho_pedazo
+
+        # Limpiar el nombre de archivo de las etiquetas para que quede prolijo
+        texto_limpio_sin_tags = re.sub(patron_tags, '', texto_usuario)
+        nombre_base = limpiar_nombre_archivo(texto_limpio_sin_tags) or "cartel_generado"
         nombre_archivo = f"{nombre_base}@{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
         
         ruta_generados = os.path.join('static', 'generados')
