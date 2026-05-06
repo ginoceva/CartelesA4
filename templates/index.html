@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Generador de Carteles</title>
     <style>
-        /* ¡Fuentes invertidas para corregir el grosor! */
         @font-face { font-family: 'FuenteNormal'; src: url('/static/arialbd.ttf'); }
         @font-face { font-family: 'FuenteNegrita'; src: url('/static/ARIBLK.TTF'); } 
         
@@ -16,12 +15,17 @@
         
         .settings-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
         .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
-        
         input[type="file"] { font-size: 0.85rem; max-width: 200px; }
         
-        textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 1rem; }
+        /* Estilos de la nueva barra de herramientas de texto */
+        .toolbar { display: flex; gap: 10px; justify-content: center; background: #eee; padding: 8px; border-radius: 4px 4px 0 0; border: 1px solid #ccc; border-bottom: none; }
+        .toolbar button { padding: 5px 10px; font-size: 1rem; cursor: pointer; border: 1px solid #bbb; background: white; border-radius: 4px; color: black; font-weight: normal; }
+        .toolbar button:hover { background: #ddd; }
+        .toolbar input[type="color"] { padding: 0; width: 30px; height: 30px; cursor: pointer; border: none; }
+        
+        textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 0 0 4px 4px; resize: vertical; margin-bottom: 1rem; font-family: monospace; }
         .actions-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
-        button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
+        .btn-main, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
         #saveButton { background-color: #002A54; } 
         #printButton { background-color: #007bff; }
         .gallery-button { background-color: #28a745; }
@@ -37,41 +41,38 @@
             <form id="generatorForm" action="/generar" method="POST" enctype="multipart/form-data">
                 
                 <div class="settings-row">
-                    <select id="sizeSelect" name="size">
-                        <option value="A4" selected>A4</option>
-                        <option value="A3">A3</option>
-                        <option value="A5">A5</option>
-                    </select>
-                    <select id="orientationSelect" name="orientation">
-                        <option value="landscape" selected>Horizontal</option>
-                        <option value="portrait">Vertical</option>
-                    </select>
-                    <label>Tamaño <input type="number" id="fontSizeInput" name="font_size" value="200" style="width: 60px;"></label>
+                    <select id="sizeSelect" name="size"><option value="A4" selected>A4</option><option value="A3">A3</option><option value="A5">A5</option></select>
+                    <select id="orientationSelect" name="orientation"><option value="landscape" selected>Horizontal</option><option value="portrait">Vertical</option></select>
+                    <label>Letra <input type="number" id="fontSizeInput" name="font_size" value="200" style="width: 60px;"></label>
                 </div>
 
-                <div class="settings-row">
+                <div class="settings-row" style="border-top: 1px solid #eee; padding-top: 10px; margin-bottom: 5px;">
                     <label style="font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                        🎨 Color: <input type="color" id="textColorInput" name="text_color" value="#000000">
+                        Color General: <input type="color" id="defaultColorInput" name="text_color" value="#000000">
                     </label>
-                    <label style="display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="boldInput" name="is_bold" value="yes"> Negrita
-                    </label>
-                    <label style="display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="underlineInput" name="is_underline" value="yes"> Subrayado
-                    </label>
+                    <input type="file" id="iconUpload" name="icono_file" accept="image/png, image/jpeg" title="Subir Icono">
+                    <button type="button" class="btn-main" id="clearIconButton">Quitar Logo</button>
                 </div>
 
-                <div class="settings-row" style="border-top: 1px solid #eee; padding-top: 10px;">
-                    <input type="file" id="iconUpload" name="icono_file" accept="image/png, image/jpeg" title="Subir Icono">
-                    <button type="button" id="clearIconButton">Quitar Logo</button>
+                <!-- BARRA DE HERRAMIENTAS PARA SELECCIÓN -->
+                <div style="text-align: left; margin-left: 2.5%;">
+                    <small style="color: #666;">Seleccioná el texto y tocá un botón para aplicarle formato:</small>
+                </div>
+                <div class="toolbar" style="width: 95%; margin: 0 auto;">
+                    <button type="button" onclick="wrapText('[b]', '[/b]')" title="Negrita"><b>N</b></button>
+                    <button type="button" onclick="wrapText('[u]', '[/u]')" title="Subrayado"><u>S</u></button>
+                    <div style="display:flex; align-items:center; gap:5px; margin-left:10px; border-left: 1px solid #ccc; padding-left: 10px;">
+                        <span style="font-size:0.9rem;">Color Selección:</span>
+                        <input type="color" id="selectionColor" onchange="wrapText('[c=' + this.value + ']', '[/c]')">
+                    </div>
                 </div>
 
                 <textarea id="texto_cartel" name="texto" required placeholder="Escribe tu texto..."></textarea>
                 <input type="hidden" id="actionInput" name="accion" value="">
                 
                 <div class="actions-container">
-                    <button type="submit" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
-                    <button type="button" id="printButton">Imprimir</button>
+                    <button type="submit" class="btn-main" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
+                    <button type="button" class="btn-main" id="printButton">Imprimir</button>
                 </div>
             </form>
             <a href="/galeria" class="gallery-button">Ver Galería</a>
@@ -94,13 +95,9 @@
         const sizeSelect = document.getElementById('sizeSelect');
         const orientationSelect = document.getElementById('orientationSelect');
         const fontSizeInput = document.getElementById('fontSizeInput');
-        const textColorInput = document.getElementById('textColorInput');
-        const boldInput = document.getElementById('boldInput');
-        const underlineInput = document.getElementById('underlineInput');
-        
+        const defaultColorInput = document.getElementById('defaultColorInput');
         const iconUpload = document.getElementById('iconUpload');
         const clearIconButton = document.getElementById('clearIconButton');
-        
         const canvas = document.getElementById('previewCanvas'); 
         const ctx = canvas.getContext('2d');
 
@@ -112,7 +109,7 @@
         let hasCustomIcon = false;
         simboloImage.onload = drawPreview;
 
-        [textArea, sizeSelect, orientationSelect, fontSizeInput, textColorInput, boldInput, underlineInput].forEach(el => el.addEventListener('input', drawPreview));
+        [textArea, sizeSelect, orientationSelect, fontSizeInput, defaultColorInput].forEach(el => el.addEventListener('input', drawPreview));
         
         iconUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -128,24 +125,52 @@
         });
 
         clearIconButton.addEventListener('click', function() {
-            iconUpload.value = ''; 
-            simboloImage.src = '';
-            hasCustomIcon = false;
-            this.style.display = 'none'; 
-            drawPreview();
+            iconUpload.value = ''; simboloImage.src = ''; hasCustomIcon = false;
+            this.style.display = 'none'; drawPreview();
         });
+
+        // INYECTOR DE ETIQUETAS
+        function wrapText(startTag, endTag) {
+            const start = textArea.selectionStart;
+            const end = textArea.selectionEnd;
+            const text = textArea.value;
+            if (start !== end) {
+                textArea.value = text.substring(0, start) + startTag + text.substring(start, end) + endTag + text.substring(end);
+                drawPreview();
+            } else {
+                alert("Primero seleccioná con el mouse la palabra que querés modificar en el cuadro de texto.");
+            }
+        }
+
+        // MOTOR DE PARSEO DE TEXTO
+        function parseLine(line, defaultColor) {
+            const pattern = /(\[b\]|\[\/b\]|\[u\]|\[\/u\]|\[c=#[0-9a-fA-F]{6}\]|\[\/c\])/i;
+            const parts = line.split(pattern);
+            let bold = false; let underline = false; let colorStack = [defaultColor];
+            let tokens = [];
+
+            parts.forEach(part => {
+                if (!part) return;
+                const p = part.toLowerCase();
+                if (p === '[b]') bold = true;
+                else if (p === '[/b]') bold = false;
+                else if (p === '[u]') underline = true;
+                else if (p === '[/u]') underline = false;
+                else if (p.startsWith('[c=')) colorStack.push(part.substring(3, 10));
+                else if (p === '[/c]') { if(colorStack.length > 1) colorStack.pop(); }
+                else tokens.push({ text: part, bold: bold, underline: underline, color: colorStack[colorStack.length - 1] });
+            });
+            return tokens;
+        }
 
         function drawPreview() { 
             const text = textArea.value.toUpperCase(); 
             const sizeKey = sizeSelect.value;
-            let width = PAPER_SIZES[sizeKey].w;
-            let height = PAPER_SIZES[sizeKey].h;
-
+            let width = PAPER_SIZES[sizeKey].w; let height = PAPER_SIZES[sizeKey].h;
             if (orientationSelect.value === 'landscape') { [width, height] = [height, width]; }
 
             canvas.width = width; canvas.height = height; 
             ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
-
             const barHeight = Math.floor(height * 0.10);
             ctx.fillStyle = BRAND_COLOR; ctx.fillRect(0, height - barHeight, width, barHeight);
 
@@ -165,36 +190,48 @@
                 topOffset = iconY + iconSize + 50; 
             }
 
-            ctx.fillStyle = textColorInput.value; 
-            const fontFamily = boldInput.checked ? 'FuenteNegrita' : 'FuenteNormal';
             const fontSize = parseInt(fontSizeInput.value) || 300;
-            ctx.font = `${fontSize}px '${fontFamily}', sans-serif`; 
-            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left'; // CAMBIO CLAVE: Dibujamos de izquierda a derecha
 
             const lines = text.split('\n'); 
             const bottomMargin = barHeight + 50; 
             const availableHeight = height - bottomMargin - topOffset;
-            
             const totalTextHeight = (lines.length * fontSize) + ((lines.length - 1) * LINE_SPACING);
             let startY = topOffset + (availableHeight - totalTextHeight) / 2;
 
-            for (let i = 0; i < lines.length; i++) { 
-                const lineText = lines[i];
-                const lineY = startY + (i * (fontSize + LINE_SPACING));
-                ctx.fillText(lineText, width / 2, lineY);
+            lines.forEach((lineText, i) => {
+                const tokens = parseLine(lineText, defaultColorInput.value);
+                
+                // 1. Calcular el ancho total de la línea para poder centrarla
+                let lineWidth = 0;
+                tokens.forEach(t => {
+                    ctx.font = `${fontSize}px '${t.bold ? 'FuenteNegrita' : 'FuenteNormal'}', sans-serif`;
+                    lineWidth += ctx.measureText(t.text).width;
+                });
 
-                // --- LÓGICA DE SUBRAYADO ---
-                if (underlineInput.checked && lineText.trim() !== '') {
-                    const textWidth = ctx.measureText(lineText).width;
-                    const underlineY = lineY + fontSize * 1.05; // Ajuste debajo de la letra
-                    ctx.beginPath();
-                    ctx.moveTo((width - textWidth) / 2, underlineY);
-                    ctx.lineTo((width + textWidth) / 2, underlineY);
-                    ctx.strokeStyle = textColorInput.value;
-                    ctx.lineWidth = Math.max(fontSize * 0.05, 3); // Grosor dinámico
-                    ctx.stroke();
-                }
-            } 
+                // 2. Dibujar ficha por ficha de izquierda a derecha
+                let currentX = (width - lineWidth) / 2;
+                const lineY = startY + (i * (fontSize + LINE_SPACING));
+
+                tokens.forEach(t => {
+                    ctx.font = `${fontSize}px '${t.bold ? 'FuenteNegrita' : 'FuenteNormal'}', sans-serif`;
+                    ctx.fillStyle = t.color;
+                    ctx.fillText(t.text, currentX, lineY);
+                    
+                    const chunkWidth = ctx.measureText(t.text).width;
+                    
+                    if (t.underline && t.text.trim() !== '') {
+                        ctx.beginPath();
+                        ctx.moveTo(currentX, lineY + fontSize * 1.05);
+                        ctx.lineTo(currentX + chunkWidth, lineY + fontSize * 1.05);
+                        ctx.strokeStyle = t.color;
+                        ctx.lineWidth = Math.max(fontSize * 0.05, 3);
+                        ctx.stroke();
+                    }
+                    currentX += chunkWidth;
+                });
+            }); 
         }
 
         const form = document.getElementById('generatorForm');
