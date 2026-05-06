@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <title>Generador de Carteles</title>
     <style>
-        @font-face { font-family: 'FuenteNormal'; src: url('/static/ARIBLK.TTF'); }
-        @font-face { font-family: 'FuenteNegrita'; src: url('/static/arialbd.ttf'); } 
+        /* ¡Fuentes invertidas para corregir el grosor! */
+        @font-face { font-family: 'FuenteNormal'; src: url('/static/arialbd.ttf'); }
+        @font-face { font-family: 'FuenteNegrita'; src: url('/static/ARIBLK.TTF'); } 
         
         body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
         .app-container { display: flex; gap: 40px; align-items: flex-start; padding: 20px; width: 100%; min-height: 100vh; justify-content: center; align-items: center; box-sizing: border-box; }
-        .form-box { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; width: 450px; }
+        .form-box { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; width: 500px; }
         .preview-box { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
         h1 { margin-top: 0; color: #333; }
         
-        .settings-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
-        .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        .settings-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
+        .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
         
-        /* Estilo para el input de archivo */
         input[type="file"] { font-size: 0.85rem; max-width: 200px; }
         
         textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 1rem; }
@@ -25,7 +25,7 @@
         #saveButton { background-color: #002A54; } 
         #printButton { background-color: #007bff; }
         .gallery-button { background-color: #28a745; }
-        #clearIconButton { background-color: #dc3545; padding: 5px 10px; font-size: 0.8rem; display: none; } /* Botón oculto por defecto */
+        #clearIconButton { background-color: #dc3545; padding: 5px 10px; font-size: 0.8rem; display: none; } 
         
         #previewCanvas { width: 100%; max-width: 600px; height: auto; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
@@ -34,7 +34,6 @@
     <div class="app-container">
         <div class="form-box">
             <h1>Generador de Carteles</h1>
-            <!-- ¡MUY IMPORTANTE: enctype permite enviar archivos al servidor! -->
             <form id="generatorForm" action="/generar" method="POST" enctype="multipart/form-data">
                 
                 <div class="settings-row">
@@ -47,15 +46,22 @@
                         <option value="landscape" selected>Horizontal</option>
                         <option value="portrait">Vertical</option>
                     </select>
-                    <input type="number" id="fontSizeInput" name="font_size" value="300" style="width: 70px;" title="Tamaño letra">
+                    <label>Tamaño <input type="number" id="fontSizeInput" name="font_size" value="200" style="width: 60px;"></label>
                 </div>
 
                 <div class="settings-row">
-                    <input type="color" id="textColorInput" name="text_color" value="#000000" title="Color del texto">
-                    <label style="display:flex; align-items:center; gap:5px; margin-right: 10px;">
+                    <label style="font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                        🎨 Color: <input type="color" id="textColorInput" name="text_color" value="#000000">
+                    </label>
+                    <label style="display:flex; align-items:center; gap:5px;">
                         <input type="checkbox" id="boldInput" name="is_bold" value="yes"> Negrita
                     </label>
-                    <!-- EL NUEVO BOTÓN PARA SUBIR IMAGEN -->
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" id="underlineInput" name="is_underline" value="yes"> Subrayado
+                    </label>
+                </div>
+
+                <div class="settings-row" style="border-top: 1px solid #eee; padding-top: 10px;">
                     <input type="file" id="iconUpload" name="icono_file" accept="image/png, image/jpeg" title="Subir Icono">
                     <button type="button" id="clearIconButton">Quitar Logo</button>
                 </div>
@@ -90,8 +96,8 @@
         const fontSizeInput = document.getElementById('fontSizeInput');
         const textColorInput = document.getElementById('textColorInput');
         const boldInput = document.getElementById('boldInput');
+        const underlineInput = document.getElementById('underlineInput');
         
-        // Elementos nuevos del icono
         const iconUpload = document.getElementById('iconUpload');
         const clearIconButton = document.getElementById('clearIconButton');
         
@@ -102,14 +108,12 @@
         logoImage.src = '/static/logo.jpg';
         logoImage.onload = drawPreview; 
 
-        // Imagen dinámica para el símbolo que sube el usuario
         const simboloImage = new Image();
         let hasCustomIcon = false;
         simboloImage.onload = drawPreview;
 
-        [textArea, sizeSelect, orientationSelect, fontSizeInput, textColorInput, boldInput].forEach(el => el.addEventListener('input', drawPreview));
+        [textArea, sizeSelect, orientationSelect, fontSizeInput, textColorInput, boldInput, underlineInput].forEach(el => el.addEventListener('input', drawPreview));
         
-        // Lógica para previsualizar la imagen que acabás de elegir en tu compu
         iconUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -117,18 +121,17 @@
                 reader.onload = function(event) {
                     simboloImage.src = event.target.result;
                     hasCustomIcon = true;
-                    clearIconButton.style.display = 'inline-block'; // Mostramos el botón de borrar
+                    clearIconButton.style.display = 'inline-block';
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Lógica para limpiar el icono elegido
         clearIconButton.addEventListener('click', function() {
-            iconUpload.value = ''; // Borra el archivo del input
+            iconUpload.value = ''; 
             simboloImage.src = '';
             hasCustomIcon = false;
-            this.style.display = 'none'; // Oculta el botón
+            this.style.display = 'none'; 
             drawPreview();
         });
 
@@ -153,7 +156,6 @@
                 ctx.drawImage(logoImage, width - logoWidth - 50, height - barHeight + Math.floor((barHeight - logoHeight) / 2), logoWidth, logoHeight);
             }
 
-            // Dibujar el icono subido (si existe)
             let topOffset = 0;
             if (hasCustomIcon && simboloImage.complete && simboloImage.naturalWidth !== 0) {
                 const iconSize = Math.floor(height * 0.20); 
@@ -177,7 +179,21 @@
             let startY = topOffset + (availableHeight - totalTextHeight) / 2;
 
             for (let i = 0; i < lines.length; i++) { 
-                ctx.fillText(lines[i], width / 2, startY + (i * (fontSize + LINE_SPACING)));
+                const lineText = lines[i];
+                const lineY = startY + (i * (fontSize + LINE_SPACING));
+                ctx.fillText(lineText, width / 2, lineY);
+
+                // --- LÓGICA DE SUBRAYADO ---
+                if (underlineInput.checked && lineText.trim() !== '') {
+                    const textWidth = ctx.measureText(lineText).width;
+                    const underlineY = lineY + fontSize * 1.05; // Ajuste debajo de la letra
+                    ctx.beginPath();
+                    ctx.moveTo((width - textWidth) / 2, underlineY);
+                    ctx.lineTo((width + textWidth) / 2, underlineY);
+                    ctx.strokeStyle = textColorInput.value;
+                    ctx.lineWidth = Math.max(fontSize * 0.05, 3); // Grosor dinámico
+                    ctx.stroke();
+                }
             } 
         }
 
@@ -202,5 +218,4 @@
         drawPreview();
     </script>
 </body>
-</html>
 </html>
