@@ -57,8 +57,8 @@ def generar_imagen():
     
     color_texto = request.form.get('text_color', '#000000')
     es_negrita = request.form.get('is_bold') == 'yes'
+    es_subrayado = request.form.get('is_underline') == 'yes'
     
-    # --- ACÁ ATRAPAMOS EL ARCHIVO QUE SUBISTE ---
     icono_file = request.files.get('icono_file')
 
     try:
@@ -83,12 +83,9 @@ def generar_imagen():
             logo = logo.resize((ancho_logo, alto_logo), resample_method)
             imagen.paste(logo, (ancho_px - ancho_logo - 50, alto_px - alto_franja + int((alto_franja - alto_logo) / 2)), logo if logo.mode == 'RGBA' else None)
 
-        # --- PROCESAR EL ICONO AL VUELO ---
         top_offset = 0
-        # Si se subió un archivo y no está vacío
         if icono_file and icono_file.filename != '':
             try:
-                # Abrimos la imagen directo desde la memoria web, sin guardarla
                 simbolo_img = Image.open(icono_file.stream).convert("RGBA")
                 icon_size = int(alto_px * 0.20) 
                 simbolo_img = simbolo_img.resize((icon_size, icon_size), resample_method)
@@ -97,9 +94,10 @@ def generar_imagen():
                 imagen.paste(simbolo_img, (icon_x, icon_y), simbolo_img)
                 top_offset = icon_y + icon_size + 50 
             except Exception as e:
-                print(f"No se pudo procesar el icono subido: {e}")
+                print(f"Error procesando icono: {e}")
 
-        ruta_fuente = 'static/arialbd.ttf' if es_negrita else 'static/ARIBLK.TTF'
+        # --- CORRECCIÓN DE FUENTES (INVERTIDAS) ---
+        ruta_fuente = 'static/ARIBLK.TTF' if es_negrita else 'static/arialbd.ttf'
         try:
             fuente = ImageFont.truetype(ruta_fuente, tamaño_fuente)
         except IOError:
@@ -108,18 +106,33 @@ def generar_imagen():
         margen_inferior = alto_franja + 50
         altura_disponible = alto_px - margen_inferior - top_offset
         
-        caja_texto = dibujo.multiline_textbbox((0, 0), texto_usuario, font=fuente, align="center", spacing=30)
-        alto_total_texto = caja_texto[3] - caja_texto[1]
-        
+        # --- DIBUJADO LÍNEA POR LÍNEA CON SUBRAYADO ---
+        lineas = texto_usuario.split('\n')
+        alto_total_texto = (len(lineas) * tamaño_fuente) + ((len(lineas) - 1) * 30)
         pos_y_inicial = top_offset + (altura_disponible - alto_total_texto) / 2
         
-        dibujo.multiline_text(
-            (ancho_px / 2, pos_y_inicial), 
-            texto_usuario, 
-            font=fuente, 
-            fill=color_texto,
-            anchor="ma", align="center", spacing=30
-        )
+        for i, linea in enumerate(lineas):
+            y_actual = pos_y_inicial + (i * (tamaño_fuente + 30))
+            
+            dibujo.text(
+                (ancho_px / 2, y_actual), 
+                linea, 
+                font=fuente, 
+                fill=color_texto,
+                anchor="ma" # Centrado arriba
+            )
+
+            # Si piden subrayado y la línea no está vacía
+            if es_subrayado and linea.strip():
+                ancho_linea = dibujo.textlength(linea, font=fuente)
+                x_inicio = (ancho_px - ancho_linea) / 2
+                x_fin = x_inicio + ancho_linea
+                
+                # Coordenada Y para la línea de subrayado
+                y_subrayado = y_actual + tamaño_fuente * 1.05
+                grosor = max(int(tamaño_fuente * 0.05), 3)
+                
+                dibujo.line([(x_inicio, y_subrayado), (x_fin, y_subrayado)], fill=color_texto, width=grosor)
 
         nombre_base = limpiar_nombre_archivo(texto_usuario) or "cartel_generado"
         nombre_archivo = f"{nombre_base}@{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
@@ -155,11 +168,6 @@ def generar_imagen():
         import traceback
         traceback.print_exc()
         return f"Ha ocurrido un error inesperado: {str(e)}", 500
-
-@app.route('/descargar/<path:filename>')
-def descargar(filename):
-    ruta_galeria = os.path.join('static', 'generados')
-    return send_file(os.path.join(ruta_galeria, filename), as_attachment=True)
 
 @app.route('/eliminar', methods=['POST'])
 def eliminar():
