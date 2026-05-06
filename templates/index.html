@@ -4,25 +4,29 @@
     <meta charset="UTF-8">
     <title>Generador de Carteles</title>
     <style>
-        @font-face { font-family: 'MiFuentePersonalizada'; src: url('/static/ARIBLK.TTF'); }
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
+        @font-face { font-family: 'FuenteNormal'; src: url('/static/ARIBLK.TTF'); }
+        @font-face { font-family: 'FuenteNegrita'; src: url('/static/arialbd.ttf'); } 
+        
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
         .app-container { display: flex; gap: 40px; align-items: flex-start; padding: 20px; width: 100%; min-height: 100vh; justify-content: center; align-items: center; box-sizing: border-box; }
         .form-box { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; width: 450px; }
         .preview-box { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
         h1 { margin-top: 0; color: #333; }
         
-        /* Controles nuevos */
-        .settings-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
-        .settings-row select, .settings-row input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        .settings-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
+        .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
         
-        textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif; resize: vertical; margin-bottom: 1rem; }
+        /* Estilo para el input de archivo */
+        input[type="file"] { font-size: 0.85rem; max-width: 200px; }
+        
+        textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 1rem; }
         .actions-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
-        button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: bold; }
-        #saveButton { background-color: #002A54; } /* Azul corporativo */
+        button, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
+        #saveButton { background-color: #002A54; } 
         #printButton { background-color: #007bff; }
         .gallery-button { background-color: #28a745; }
+        #clearIconButton { background-color: #dc3545; padding: 5px 10px; font-size: 0.8rem; display: none; } /* Botón oculto por defecto */
         
-        /* El canvas ahora se adapta al contenedor, pero mantiene la proporción real por detrás */
         #previewCanvas { width: 100%; max-width: 600px; height: auto; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
@@ -30,24 +34,33 @@
     <div class="app-container">
         <div class="form-box">
             <h1>Generador de Carteles</h1>
-            <form id="generatorForm" action="/generar" method="POST">
+            <!-- ¡MUY IMPORTANTE: enctype permite enviar archivos al servidor! -->
+            <form id="generatorForm" action="/generar" method="POST" enctype="multipart/form-data">
                 
-                <!-- NUEVOS CONTROLES -->
                 <div class="settings-row">
                     <select id="sizeSelect" name="size">
-                        <option value="A4" selected>A4 (Estándar)</option>
-                        <option value="A3">A3 (Grande)</option>
-                        <option value="A5">A5 (Pequeño)</option>
+                        <option value="A4" selected>A4</option>
+                        <option value="A3">A3</option>
+                        <option value="A5">A5</option>
                     </select>
                     <select id="orientationSelect" name="orientation">
                         <option value="landscape" selected>Horizontal</option>
                         <option value="portrait">Vertical</option>
                     </select>
-                    <input type="number" id="fontSizeInput" name="font_size" value="300" placeholder="Tamaño letra" style="width: 80px;" title="Tamaño de la fuente">
+                    <input type="number" id="fontSizeInput" name="font_size" value="300" style="width: 70px;" title="Tamaño letra">
                 </div>
 
-                <label for="texto_cartel">Escribe tu texto:</label><br><br>
-                <textarea id="texto_cartel" name="texto" required></textarea>
+                <div class="settings-row">
+                    <input type="color" id="textColorInput" name="text_color" value="#000000" title="Color del texto">
+                    <label style="display:flex; align-items:center; gap:5px; margin-right: 10px;">
+                        <input type="checkbox" id="boldInput" name="is_bold" value="yes"> Negrita
+                    </label>
+                    <!-- EL NUEVO BOTÓN PARA SUBIR IMAGEN -->
+                    <input type="file" id="iconUpload" name="icono_file" accept="image/png, image/jpeg" title="Subir Icono">
+                    <button type="button" id="clearIconButton">Quitar Logo</button>
+                </div>
+
+                <textarea id="texto_cartel" name="texto" required placeholder="Escribe tu texto..."></textarea>
                 <input type="hidden" id="actionInput" name="accion" value="">
                 
                 <div class="actions-container">
@@ -67,93 +80,107 @@
     <iframe id="printFrame" name="printFrame" style="display: none;"></iframe>
 
     <script>
-        // Medidas estándar a 300 DPI (Ancho, Alto en Vertical)
-        const PAPER_SIZES = {
-            'A3': { w: 3508, h: 4961 },
-            'A4': { w: 2480, h: 3508 },
-            'A5': { w: 1748, h: 2480 }
-        };
-
+        const PAPER_SIZES = { 'A3': { w: 3508, h: 4961 }, 'A4': { w: 2480, h: 3508 }, 'A5': { w: 1748, h: 2480 } };
         const LINE_SPACING = 30; 
-        const TEXT_COLOR = 'black';
-        const BRAND_COLOR = '#002A54'; // Azul corporativo
+        const BRAND_COLOR = '#002A54'; 
 
         const textArea = document.getElementById('texto_cartel'); 
         const sizeSelect = document.getElementById('sizeSelect');
         const orientationSelect = document.getElementById('orientationSelect');
         const fontSizeInput = document.getElementById('fontSizeInput');
+        const textColorInput = document.getElementById('textColorInput');
+        const boldInput = document.getElementById('boldInput');
+        
+        // Elementos nuevos del icono
+        const iconUpload = document.getElementById('iconUpload');
+        const clearIconButton = document.getElementById('clearIconButton');
+        
         const canvas = document.getElementById('previewCanvas'); 
         const ctx = canvas.getContext('2d');
 
-        // Cargar el logo una sola vez
         const logoImage = new Image(); 
         logoImage.src = '/static/logo.jpg';
-        logoImage.onload = drawPreview; // Dibujar cuando cargue el logo
+        logoImage.onload = drawPreview; 
 
-        // Eventos para redibujar en vivo si cambias algo
-        textArea.addEventListener('input', drawPreview);
-        sizeSelect.addEventListener('change', drawPreview);
-        orientationSelect.addEventListener('change', drawPreview);
-        fontSizeInput.addEventListener('input', drawPreview);
+        // Imagen dinámica para el símbolo que sube el usuario
+        const simboloImage = new Image();
+        let hasCustomIcon = false;
+        simboloImage.onload = drawPreview;
+
+        [textArea, sizeSelect, orientationSelect, fontSizeInput, textColorInput, boldInput].forEach(el => el.addEventListener('input', drawPreview));
+        
+        // Lógica para previsualizar la imagen que acabás de elegir en tu compu
+        iconUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    simboloImage.src = event.target.result;
+                    hasCustomIcon = true;
+                    clearIconButton.style.display = 'inline-block'; // Mostramos el botón de borrar
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Lógica para limpiar el icono elegido
+        clearIconButton.addEventListener('click', function() {
+            iconUpload.value = ''; // Borra el archivo del input
+            simboloImage.src = '';
+            hasCustomIcon = false;
+            this.style.display = 'none'; // Oculta el botón
+            drawPreview();
+        });
 
         function drawPreview() { 
             const text = textArea.value.toUpperCase(); 
             const sizeKey = sizeSelect.value;
-            const orientation = orientationSelect.value;
-            const fontSize = parseInt(fontSizeInput.value) || 300;
-
-            // 1. Configurar tamaño del lienzo
             let width = PAPER_SIZES[sizeKey].w;
             let height = PAPER_SIZES[sizeKey].h;
 
-            if (orientation === 'landscape') {
-                [width, height] = [height, width]; // Intercambiar medidas
-            }
+            if (orientationSelect.value === 'landscape') { [width, height] = [height, width]; }
 
-            canvas.width = width; 
-            canvas.height = height; 
+            canvas.width = width; canvas.height = height; 
+            ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
 
-            // 2. Fondo blanco
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, width, height);
+            const barHeight = Math.floor(height * 0.10);
+            ctx.fillStyle = BRAND_COLOR; ctx.fillRect(0, height - barHeight, width, barHeight);
 
-            // 3. Dibujar franja corporativa
-            const barHeight = Math.floor(height * 0.10); // 10% de la hoja
-            ctx.fillStyle = BRAND_COLOR;
-            ctx.fillRect(0, height - barHeight, width, barHeight);
-
-            // 4. Dibujar el logo si ya cargó
             if (logoImage.complete && logoImage.naturalWidth !== 0) {
                 const logoHeight = Math.floor(barHeight * 0.8);
                 const ratio = logoHeight / logoImage.height;
                 const logoWidth = Math.floor(logoImage.width * ratio);
-                
-                const logoX = width - logoWidth - 50;
-                const logoY = height - barHeight + Math.floor((barHeight - logoHeight) / 2);
-                
-                ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+                ctx.drawImage(logoImage, width - logoWidth - 50, height - barHeight + Math.floor((barHeight - logoHeight) / 2), logoWidth, logoHeight);
             }
 
-            // 5. Configurar y dibujar el texto
-            ctx.fillStyle = TEXT_COLOR; 
-            ctx.font = `${fontSize}px 'MiFuentePersonalizada', sans-serif`; 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
+            // Dibujar el icono subido (si existe)
+            let topOffset = 0;
+            if (hasCustomIcon && simboloImage.complete && simboloImage.naturalWidth !== 0) {
+                const iconSize = Math.floor(height * 0.20); 
+                const iconX = (width - iconSize) / 2;
+                const iconY = Math.floor(height * 0.05); 
+                ctx.drawImage(simboloImage, iconX, iconY, iconSize, iconSize);
+                topOffset = iconY + iconSize + 50; 
+            }
+
+            ctx.fillStyle = textColorInput.value; 
+            const fontFamily = boldInput.checked ? 'FuenteNegrita' : 'FuenteNormal';
+            const fontSize = parseInt(fontSizeInput.value) || 300;
+            ctx.font = `${fontSize}px '${fontFamily}', sans-serif`; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
 
             const lines = text.split('\n'); 
             const bottomMargin = barHeight + 50; 
-            const availableHeight = height - bottomMargin;
+            const availableHeight = height - bottomMargin - topOffset;
             
             const totalTextHeight = (lines.length * fontSize) + ((lines.length - 1) * LINE_SPACING);
-            let startY = (availableHeight - totalTextHeight) / 2;
+            let startY = topOffset + (availableHeight - totalTextHeight) / 2;
 
             for (let i = 0; i < lines.length; i++) { 
-                const y = startY + (i * (fontSize + LINE_SPACING));
-                ctx.fillText(lines[i], width / 2, y);
+                ctx.fillText(lines[i], width / 2, startY + (i * (fontSize + LINE_SPACING)));
             } 
         }
 
-        // Lógica de botones
         const form = document.getElementById('generatorForm');
         const actionInput = document.getElementById('actionInput');
         const printButton = document.getElementById('printButton');
@@ -169,15 +196,11 @@
             .then(blob => { 
                 const pdfUrl = URL.createObjectURL(blob); 
                 printFrame.src = pdfUrl; 
-                printFrame.onload = function() { 
-                    try { printFrame.contentWindow.print(); } 
-                    catch (e) { console.error("Error de impresión:", e); } 
-                }; 
+                printFrame.onload = function() { try { printFrame.contentWindow.print(); } catch (e) { console.error("Error:", e); } }; 
             }); 
         });
-
-        // Dibujar inicial por si acaso
         drawPreview();
     </script>
 </body>
+</html>
 </html>
