@@ -177,6 +177,12 @@ def generar_imagen():
         c.save()
         pdf_io.seek(0)
         
+        # Liberar memoria pesada antes de enviar el PDF
+        del imagen
+        del imagen_rgb
+        img_io.close()
+        gc.collect() # Fuerza a Python a limpiar la RAM
+
         forzar_descarga = not accion_imprimir
         return send_file(pdf_io, mimetype='application/pdf', as_attachment=forzar_descarga, download_name=f'cartel_{nombre_base}_{size_str}.pdf')
 
