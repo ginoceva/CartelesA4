@@ -17,7 +17,6 @@
         .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
         input[type="file"] { font-size: 0.85rem; max-width: 200px; }
         
-        /* Estilos de la nueva barra de herramientas de texto */
         .toolbar { display: flex; gap: 10px; justify-content: center; background: #eee; padding: 8px; border-radius: 4px 4px 0 0; border: 1px solid #ccc; border-bottom: none; }
         .toolbar button { padding: 5px 10px; font-size: 1rem; cursor: pointer; border: 1px solid #bbb; background: white; border-radius: 4px; color: black; font-weight: normal; }
         .toolbar button:hover { background: #ddd; }
@@ -54,7 +53,6 @@
                     <button type="button" class="btn-main" id="clearIconButton">Quitar Logo</button>
                 </div>
 
-                <!-- BARRA DE HERRAMIENTAS PARA SELECCIÓN -->
                 <div style="text-align: left; margin-left: 2.5%;">
                     <small style="color: #666;">Seleccioná el texto y tocá un botón para aplicarle formato:</small>
                 </div>
@@ -89,7 +87,7 @@
     <script>
         const PAPER_SIZES = { 'A3': { w: 3508, h: 4961 }, 'A4': { w: 2480, h: 3508 }, 'A5': { w: 1748, h: 2480 } };
         const LINE_SPACING = 30; 
-        const BRAND_COLOR = '#002A54'; 
+        const CEVA_RED = '#E3000F'; // Color institucional del triángulo
 
         const textArea = document.getElementById('texto_cartel'); 
         const sizeSelect = document.getElementById('sizeSelect');
@@ -129,7 +127,6 @@
             this.style.display = 'none'; drawPreview();
         });
 
-        // INYECTOR DE ETIQUETAS
         function wrapText(startTag, endTag) {
             const start = textArea.selectionStart;
             const end = textArea.selectionEnd;
@@ -142,7 +139,6 @@
             }
         }
 
-        // MOTOR DE PARSEO DE TEXTO
         function parseLine(line, defaultColor) {
             const pattern = /(\[b\]|\[\/b\]|\[u\]|\[\/u\]|\[c=#[0-9a-fA-F]{6}\]|\[\/c\])/i;
             const parts = line.split(pattern);
@@ -171,14 +167,29 @@
 
             canvas.width = width; canvas.height = height; 
             ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
-            const barHeight = Math.floor(height * 0.10);
-            ctx.fillStyle = BRAND_COLOR; ctx.fillRect(0, height - barHeight, width, barHeight);
+            
+            // --- NUEVO: TRIÁNGULO ROJO EN LA ESQUINA INFERIOR IZQUIERDA ---
+            const triHeight = Math.floor(height * 0.18); // Altura del triangulo
+            const triWidth = Math.floor(width * 0.04);  // Base del triangulo
+            
+            ctx.fillStyle = CEVA_RED;
+            ctx.beginPath();
+            ctx.moveTo(0, height); // Punto 1: Abajo a la izquierda
+            ctx.lineTo(triWidth, height); // Punto 2: Abajo a la derecha del triangulo
+            ctx.lineTo(0, height - triHeight); // Punto 3: Arriba a la izquierda
+            ctx.closePath();
+            ctx.fill();
 
+            // --- NUEVO: LOGO FLOTANDO A LA DERECHA ---
             if (logoImage.complete && logoImage.naturalWidth !== 0) {
-                const logoHeight = Math.floor(barHeight * 0.8);
+                const logoHeight = Math.floor(height * 0.06); // 6% de la hoja para que quede proporcionado
                 const ratio = logoHeight / logoImage.height;
                 const logoWidth = Math.floor(logoImage.width * ratio);
-                ctx.drawImage(logoImage, width - logoWidth - 50, height - barHeight + Math.floor((barHeight - logoHeight) / 2), logoWidth, logoHeight);
+                
+                const marginX = Math.floor(width * 0.04);
+                const marginY = Math.floor(height * 0.04);
+                
+                ctx.drawImage(logoImage, width - logoWidth - marginX, height - logoHeight - marginY, logoWidth, logoHeight);
             }
 
             let topOffset = 0;
@@ -192,10 +203,10 @@
 
             const fontSize = parseInt(fontSizeInput.value) || 300;
             ctx.textBaseline = 'top';
-            ctx.textAlign = 'left'; // CAMBIO CLAVE: Dibujamos de izquierda a derecha
+            ctx.textAlign = 'left'; 
 
             const lines = text.split('\n'); 
-            const bottomMargin = barHeight + 50; 
+            const bottomMargin = Math.floor(height * 0.15); // Margen inferior general para el texto
             const availableHeight = height - bottomMargin - topOffset;
             const totalTextHeight = (lines.length * fontSize) + ((lines.length - 1) * LINE_SPACING);
             let startY = topOffset + (availableHeight - totalTextHeight) / 2;
@@ -203,14 +214,12 @@
             lines.forEach((lineText, i) => {
                 const tokens = parseLine(lineText, defaultColorInput.value);
                 
-                // 1. Calcular el ancho total de la línea para poder centrarla
                 let lineWidth = 0;
                 tokens.forEach(t => {
                     ctx.font = `${fontSize}px '${t.bold ? 'FuenteNegrita' : 'FuenteNormal'}', sans-serif`;
                     lineWidth += ctx.measureText(t.text).width;
                 });
 
-                // 2. Dibujar ficha por ficha de izquierda a derecha
                 let currentX = (width - lineWidth) / 2;
                 const lineY = startY + (i * (fontSize + LINE_SPACING));
 
