@@ -65,19 +65,28 @@ def generar_imagen():
         imagen = Image.new("RGBA", (ancho_px, alto_px), "white")
         dibujo = ImageDraw.Draw(imagen)
 
-        alto_franja = int(alto_px * 0.10) 
-        dibujo.rectangle([(0, alto_px - alto_franja), (ancho_px, alto_px)], fill="#002A54")
+        # --- DIBUJAR TRIÁNGULO ROJO ---
+        tri_height = int(alto_px * 0.18)
+        tri_width = int(ancho_px * 0.04)
+        dibujo.polygon([(0, alto_px), (tri_width, alto_px), (0, alto_px - tri_height)], fill="#E3000F")
 
+        # --- PEGAR LOGO FLOTANDO ---
         ruta_logo = 'static/logo.jpg'
         if os.path.exists(ruta_logo):
             logo = Image.open(ruta_logo).convert("RGBA")
-            alto_logo = int(alto_franja * 0.8)
+            alto_logo = int(alto_px * 0.06)
             proporcion = alto_logo / float(logo.size[1])
             ancho_logo = int(float(logo.size[0]) * float(proporcion))
             try: resample_method = Image.Resampling.LANCZOS
             except AttributeError: resample_method = Image.LANCZOS
             logo = logo.resize((ancho_logo, alto_logo), resample_method)
-            imagen.paste(logo, (ancho_px - ancho_logo - 50, alto_px - alto_franja + int((alto_franja - alto_logo) / 2)), logo if logo.mode == 'RGBA' else None)
+            
+            margin_x = int(ancho_px * 0.04)
+            margin_y = int(alto_px * 0.04)
+            pos_x = ancho_px - ancho_logo - margin_x
+            pos_y = alto_px - alto_logo - margin_y
+            
+            imagen.paste(logo, (pos_x, pos_y), logo if logo.mode == 'RGBA' else None)
 
         top_offset = 0
         if icono_file and icono_file.filename != '':
@@ -92,7 +101,6 @@ def generar_imagen():
             except Exception as e:
                 print(f"Error procesando icono: {e}")
 
-        # Carga de fuentes (Normal y Bold)
         try:
             fuente_normal = ImageFont.truetype('static/arialbd.ttf', tamaño_fuente)
             fuente_negrita = ImageFont.truetype('static/ARIBLK.TTF', tamaño_fuente)
@@ -100,26 +108,22 @@ def generar_imagen():
             fuente_normal = ImageFont.load_default()
             fuente_negrita = ImageFont.load_default()
 
-        margen_inferior = alto_franja + 50
+        margen_inferior = int(alto_px * 0.15)
         altura_disponible = alto_px - margen_inferior - top_offset
         lineas = texto_usuario.split('\n')
         alto_total_texto = (len(lineas) * tamaño_fuente) + ((len(lineas) - 1) * 30)
         pos_y_inicial = top_offset + (altura_disponible - alto_total_texto) / 2
         
-        # --- EL NUEVO MOTOR PARSER DE ETIQUETAS EN PYTHON ---
-        # Expresión regular para encontrar nuestras etiquetas
         patron_tags = r'(\[B\]|\[/B\]|\[U\]|\[/U\]|\[C=#[0-9A-F]{6}\]|\[/C\])'
 
         for i, linea in enumerate(lineas):
             partes = re.split(patron_tags, linea)
             
-            # Estado actual mientras leemos la línea
             es_negrita = False
             es_subrayado = False
             pila_colores = [color_texto_default]
             tokens = []
 
-            # Leer la línea pedacito a pedacito
             for parte in partes:
                 if not parte: continue
                 if parte == '[B]': es_negrita = True
@@ -137,13 +141,11 @@ def generar_imagen():
                         'color': pila_colores[-1]
                     })
 
-            # 1. Calcular ancho total de la línea
             ancho_linea = 0
             for t in tokens:
                 f_actual = fuente_negrita if t['negrita'] else fuente_normal
                 ancho_linea += dibujo.textlength(t['texto'], font=f_actual)
 
-            # 2. Dibujar izquierda a derecha para que quede centrada
             x_actual = (ancho_px - ancho_linea) / 2
             y_actual = pos_y_inicial + (i * (tamaño_fuente + 30))
 
@@ -151,7 +153,6 @@ def generar_imagen():
                 f_actual = fuente_negrita if t['negrita'] else fuente_normal
                 ancho_pedazo = dibujo.textlength(t['texto'], font=f_actual)
                 
-                # "la" significa Left-Ascender (dibuja hacia la derecha desde el punto X)
                 dibujo.text((x_actual, y_actual), t['texto'], font=f_actual, fill=t['color'], anchor="la")
                 
                 if t['subrayado'] and t['texto'].strip():
@@ -161,7 +162,6 @@ def generar_imagen():
                 
                 x_actual += ancho_pedazo
 
-        # Limpiar el nombre de archivo de las etiquetas para que quede prolijo
         texto_limpio_sin_tags = re.sub(patron_tags, '', texto_usuario)
         nombre_base = limpiar_nombre_archivo(texto_limpio_sin_tags) or "cartel_generado"
         nombre_archivo = f"{nombre_base}@{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
