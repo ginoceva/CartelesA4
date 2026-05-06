@@ -74,7 +74,7 @@ def generar_imagen():
         ruta_logo = 'static/logo.jpg'
         if os.path.exists(ruta_logo):
             logo = Image.open(ruta_logo).convert("RGBA")
-            alto_logo = int(alto_px * 0.06)
+            alto_logo = int(alto_px * 0.1)
             proporcion = alto_logo / float(logo.size[1])
             ancho_logo = int(float(logo.size[0]) * float(proporcion))
             try: resample_method = Image.Resampling.LANCZOS
