@@ -30,9 +30,15 @@ def limpiar_nombre_archivo(texto):
     texto_limpio = re.sub(r'[^\w-]', '', texto_limpio)
     return texto_limpio[:50]
 
+# Tu código original que ya funcionaba
 @app.route('/')
-def pagina_de_inicio():
-    return render_template('index.html')
+def generador_clasico():
+    return render_template('index.html') # Tu página anterior no se toca
+
+# La nueva funcionalidad opcional
+@app.route('/datamatrix')
+def generador_datamatrix():
+    return render_template('cartel_datamatrix.html')
 
 @app.route('/galeria')
 def galeria():
