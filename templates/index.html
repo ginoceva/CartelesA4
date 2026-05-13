@@ -2,266 +2,146 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Generador de Carteles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Señalética - CEVA Logistics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @font-face { font-family: 'FuenteNormal'; src: url('/static/arialbd.ttf'); }
-        @font-face { font-family: 'FuenteNegrita'; src: url('/static/ARIBLK.TTF'); } 
-        
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
-        .app-container { display: flex; gap: 40px; align-items: flex-start; padding: 20px; width: 100%; min-height: 100vh; justify-content: center; align-items: center; box-sizing: border-box; }
-        .form-box { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; width: 500px; }
-        .preview-box { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
-        h1 { margin-top: 0; color: #333; }
-        
-        .settings-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
-        .settings-row select, .settings-row input[type="number"], .settings-row input[type="color"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
-        input[type="file"] { font-size: 0.85rem; max-width: 200px; }
-        
-        .toolbar { display: flex; gap: 10px; justify-content: center; background: #eee; padding: 8px; border-radius: 4px 4px 0 0; border: 1px solid #ccc; border-bottom: none; }
-        .toolbar button { padding: 5px 10px; font-size: 1rem; cursor: pointer; border: 1px solid #bbb; background: white; border-radius: 4px; color: black; font-weight: normal; }
-        .toolbar button:hover { background: #ddd; }
-        .toolbar input[type="color"] { padding: 0; width: 30px; height: 30px; cursor: pointer; border: none; }
-        
-        textarea { font-size: 1rem; padding: 10px; width: 95%; height: 120px; border: 1px solid #ccc; border-radius: 0 0 4px 4px; resize: vertical; margin-bottom: 1rem; font-family: monospace; }
-        .actions-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; }
-        .btn-main, .gallery-button { font-size: 1rem; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
-        #saveButton { background-color: #002A54; } 
-        #printButton { background-color: #007bff; }
-        .gallery-button { background-color: #28a745; }
-        #clearIconButton { background-color: #dc3545; padding: 5px 10px; font-size: 0.8rem; display: none; } 
-        
-        #previewCanvas { width: 100%; max-width: 600px; height: auto; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        :root {
+            --primary-color: #002b5e; /* Azul oscuro CEVA */
+            --accent-color: #e30613;  /* Rojo CEVA */
+            --bg-color: #f4f7f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            background-color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-header {
+            height: 50px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-top: 10px;
+            font-size: 24px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1000px;
+            padding: 20px;
+        }
+
+        /* Estilo de las tarjetas de selección */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 300px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-bottom: 5px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--accent-color);
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .btn-entry {
+            margin-top: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="form-box">
-            <h1>Generador de Carteles</h1>
-            <form id="generatorForm" action="/generar" method="POST" enctype="multipart/form-data">
-                
-                <div class="settings-row">
-                    <select id="sizeSelect" name="size"><option value="A4" selected>A4</option><option value="A3">A3</option><option value="A5">A5</option></select>
-                    <select id="orientationSelect" name="orientation"><option value="landscape" selected>Horizontal</option><option value="portrait">Vertical</option></select>
-                    <label>Letra <input type="number" id="fontSizeInput" name="font_size" value="200" style="width: 60px;"></label>
-                </div>
 
-                <div class="settings-row" style="border-top: 1px solid #eee; padding-top: 10px; margin-bottom: 5px;">
-                    <label style="font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                        Color General: <input type="color" id="defaultColorInput" name="text_color" value="#000000">
-                    </label>
-                    <input type="file" id="iconUpload" name="icono_file" accept="image/png, image/jpeg" title="Subir Icono">
-                    <button type="button" class="btn-main" id="clearIconButton">Quitar Logo</button>
-                </div>
+    <header>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Ceva_Logistics_logo.svg/1200px-Ceva_Logistics_logo.svg.png" alt="CEVA Logo" class="logo-header">
+        <h1>Generador de Señalética Logística</h1>
+    </header>
 
-                <div style="text-align: left; margin-left: 2.5%;">
-                    <small style="color: #666;">Seleccioná el texto y tocá un botón para aplicarle formato:</small>
-                </div>
-                <div class="toolbar" style="width: 95%; margin: 0 auto;">
-                    <button type="button" onclick="wrapText('[b]', '[/b]')" title="Negrita"><b>N</b></button>
-                    <button type="button" onclick="wrapText('[u]', '[/u]')" title="Subrayado"><u>S</u></button>
-                    <div style="display:flex; align-items:center; gap:5px; margin-left:10px; border-left: 1px solid #ccc; padding-left: 10px;">
-                        <span style="font-size:0.9rem;">Color Selección:</span>
-                        <input type="color" id="selectionColor" onchange="wrapText('[c=' + this.value + ']', '[/c]')">
-                    </div>
-                </div>
-
-                <textarea id="texto_cartel" name="texto" required placeholder="Escribe tu texto..."></textarea>
-                <input type="hidden" id="actionInput" name="accion" value="">
-                
-                <div class="actions-container">
-                    <button type="submit" class="btn-main" id="saveButton" onclick="setAction('guardar')">Guardar PDF</button>
-                    <button type="button" class="btn-main" id="printButton">Imprimir</button>
-                </div>
-            </form>
-            <a href="/galeria" class="gallery-button">Ver Galería</a>
-        </div>
+    <div class="container">
         
-        <div class="preview-box">
-            <h2>Previsualización en Vivo</h2>
-            <canvas id="previewCanvas"></canvas>
-        </div>
+        <a href="/estandar" class="card">
+            <div>
+                <div class="icon">📄</div>
+                <h2>Carteles Estándar</h2>
+                <p>Genera los carteles clásicos de ubicación, pasillo y estantería que utilizas habitualmente.</p>
+            </div>
+            <div class="btn-entry">Abrir Herramienta</div>
+        </a>
+
+        <a href="/datamatrix" class="card">
+            <div>
+                <div class="icon">🔳</div>
+                <h2>Data Matrix Pack</h2>
+                <p>Crea carteles con códigos Data Matrix de alta densidad y texto superior para picking.</p>
+            </div>
+            <div class="btn-entry">Probar Nueva Función</div>
+        </a>
+
     </div>
-    
-    <iframe id="printFrame" name="printFrame" style="display: none;"></iframe>
 
-    <script>
-        const PAPER_SIZES = { 'A3': { w: 3508, h: 4961 }, 'A4': { w: 2480, h: 3508 }, 'A5': { w: 1748, h: 2480 } };
-        const LINE_SPACING = 30; 
-        const CEVA_RED = '#E3000F'; // Color institucional del triángulo
+    <footer>
+        &copy; 2024 CEVA Logistics - Centro de Operaciones
+    </footer>
 
-        const textArea = document.getElementById('texto_cartel'); 
-        const sizeSelect = document.getElementById('sizeSelect');
-        const orientationSelect = document.getElementById('orientationSelect');
-        const fontSizeInput = document.getElementById('fontSizeInput');
-        const defaultColorInput = document.getElementById('defaultColorInput');
-        const iconUpload = document.getElementById('iconUpload');
-        const clearIconButton = document.getElementById('clearIconButton');
-        const canvas = document.getElementById('previewCanvas'); 
-        const ctx = canvas.getContext('2d');
-
-        const logoImage = new Image(); 
-        logoImage.src = '/static/logo.jpg';
-        logoImage.onload = drawPreview; 
-
-        const simboloImage = new Image();
-        let hasCustomIcon = false;
-        simboloImage.onload = drawPreview;
-
-        [textArea, sizeSelect, orientationSelect, fontSizeInput, defaultColorInput].forEach(el => el.addEventListener('input', drawPreview));
-        
-        iconUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    simboloImage.src = event.target.result;
-                    hasCustomIcon = true;
-                    clearIconButton.style.display = 'inline-block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        clearIconButton.addEventListener('click', function() {
-            iconUpload.value = ''; simboloImage.src = ''; hasCustomIcon = false;
-            this.style.display = 'none'; drawPreview();
-        });
-
-        function wrapText(startTag, endTag) {
-            const start = textArea.selectionStart;
-            const end = textArea.selectionEnd;
-            const text = textArea.value;
-            if (start !== end) {
-                textArea.value = text.substring(0, start) + startTag + text.substring(start, end) + endTag + text.substring(end);
-                drawPreview();
-            } else {
-                alert("Primero seleccioná con el mouse la palabra que querés modificar en el cuadro de texto.");
-            }
-        }
-
-        function parseLine(line, defaultColor) {
-            const pattern = /(\[b\]|\[\/b\]|\[u\]|\[\/u\]|\[c=#[0-9a-fA-F]{6}\]|\[\/c\])/i;
-            const parts = line.split(pattern);
-            let bold = false; let underline = false; let colorStack = [defaultColor];
-            let tokens = [];
-
-            parts.forEach(part => {
-                if (!part) return;
-                const p = part.toLowerCase();
-                if (p === '[b]') bold = true;
-                else if (p === '[/b]') bold = false;
-                else if (p === '[u]') underline = true;
-                else if (p === '[/u]') underline = false;
-                else if (p.startsWith('[c=')) colorStack.push(part.substring(3, 10));
-                else if (p === '[/c]') { if(colorStack.length > 1) colorStack.pop(); }
-                else tokens.push({ text: part, bold: bold, underline: underline, color: colorStack[colorStack.length - 1] });
-            });
-            return tokens;
-        }
-
-        function drawPreview() { 
-            const text = textArea.value.toUpperCase(); 
-            const sizeKey = sizeSelect.value;
-            let width = PAPER_SIZES[sizeKey].w; let height = PAPER_SIZES[sizeKey].h;
-            if (orientationSelect.value === 'landscape') { [width, height] = [height, width]; }
-
-            canvas.width = width; canvas.height = height; 
-            ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
-            
-            // --- NUEVO: TRIÁNGULO ROJO EN LA ESQUINA INFERIOR IZQUIERDA ---
-            const triHeight = Math.floor(height * 0.18); // Altura del triangulo
-            const triWidth = Math.floor(width * 0.04);  // Base del triangulo
-            
-            ctx.fillStyle = CEVA_RED;
-            ctx.beginPath();
-            ctx.moveTo(0, height); // Punto 1: Abajo a la izquierda
-            ctx.lineTo(triWidth, height); // Punto 2: Abajo a la derecha del triangulo
-            ctx.lineTo(0, height - triHeight); // Punto 3: Arriba a la izquierda
-            ctx.closePath();
-            ctx.fill();
-
-            // --- NUEVO: LOGO FLOTANDO A LA DERECHA ---
-            if (logoImage.complete && logoImage.naturalWidth !== 0) {
-                const logoHeight = Math.floor(height * 0.1); // 10% de la hoja para que quede proporcionado
-                const ratio = logoHeight / logoImage.height;
-                const logoWidth = Math.floor(logoImage.width * ratio);
-                
-                const marginX = Math.floor(width * 0.04);
-                const marginY = Math.floor(height * 0.04);
-                
-                ctx.drawImage(logoImage, width - logoWidth - marginX, height - logoHeight - marginY, logoWidth, logoHeight);
-            }
-
-            let topOffset = 0;
-            if (hasCustomIcon && simboloImage.complete && simboloImage.naturalWidth !== 0) {
-                const iconSize = Math.floor(height * 0.20); 
-                const iconX = (width - iconSize) / 2;
-                const iconY = Math.floor(height * 0.05); 
-                ctx.drawImage(simboloImage, iconX, iconY, iconSize, iconSize);
-                topOffset = iconY + iconSize + 50; 
-            }
-
-            const fontSize = parseInt(fontSizeInput.value) || 300;
-            ctx.textBaseline = 'top';
-            ctx.textAlign = 'left'; 
-
-            const lines = text.split('\n'); 
-            const bottomMargin = Math.floor(height * 0.15); // Margen inferior general para el texto
-            const availableHeight = height - bottomMargin - topOffset;
-            const totalTextHeight = (lines.length * fontSize) + ((lines.length - 1) * LINE_SPACING);
-            let startY = topOffset + (availableHeight - totalTextHeight) / 2;
-
-            lines.forEach((lineText, i) => {
-                const tokens = parseLine(lineText, defaultColorInput.value);
-                
-                let lineWidth = 0;
-                tokens.forEach(t => {
-                    ctx.font = `${fontSize}px '${t.bold ? 'FuenteNegrita' : 'FuenteNormal'}', sans-serif`;
-                    lineWidth += ctx.measureText(t.text).width;
-                });
-
-                let currentX = (width - lineWidth) / 2;
-                const lineY = startY + (i * (fontSize + LINE_SPACING));
-
-                tokens.forEach(t => {
-                    ctx.font = `${fontSize}px '${t.bold ? 'FuenteNegrita' : 'FuenteNormal'}', sans-serif`;
-                    ctx.fillStyle = t.color;
-                    ctx.fillText(t.text, currentX, lineY);
-                    
-                    const chunkWidth = ctx.measureText(t.text).width;
-                    
-                    if (t.underline && t.text.trim() !== '') {
-                        ctx.beginPath();
-                        ctx.moveTo(currentX, lineY + fontSize * 1.05);
-                        ctx.lineTo(currentX + chunkWidth, lineY + fontSize * 1.05);
-                        ctx.strokeStyle = t.color;
-                        ctx.lineWidth = Math.max(fontSize * 0.05, 3);
-                        ctx.stroke();
-                    }
-                    currentX += chunkWidth;
-                });
-            }); 
-        }
-
-        const form = document.getElementById('generatorForm');
-        const actionInput = document.getElementById('actionInput');
-        const printButton = document.getElementById('printButton');
-        const printFrame = document.getElementById('printFrame');
-        
-        function setAction(action) { actionInput.value = action; }
-        
-        printButton.addEventListener('click', function() { 
-            setAction('imprimir'); 
-            const formData = new FormData(form); 
-            fetch('/generar', { method: 'POST', body: formData })
-            .then(response => response.blob())
-            .then(blob => { 
-                const pdfUrl = URL.createObjectURL(blob); 
-                printFrame.src = pdfUrl; 
-                printFrame.onload = function() { try { printFrame.contentWindow.print(); } catch (e) { console.error("Error:", e); } }; 
-            }); 
-        });
-        drawPreview();
-    </script>
 </body>
 </html>
