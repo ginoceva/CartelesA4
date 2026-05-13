@@ -8,31 +8,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A3, A4, A5, landscape, portrait
 from reportlab.lib.utils import ImageReader
 
-
 app = Flask(__name__)
-
-# Menú principal
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-# Herramienta original
-@app.route('/estandar')
-def generador_estandar():
-    return render_template('cartel_estandar.html')
-
-# Herramienta nueva
-@app.route('/datamatrix')
-def generador_datamatrix():
-    return render_template('cartel_datamatrix.html')
-
-# Galería (que vi que tenías en tu repositorio)
-@app.route('/galeria')
-def galeria():
-    return render_template('galeria.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
 
 # Diccionario de tamaños de papel a 300 DPI (Píxeles: Ancho, Alto para orientación Vertical/Portrait)
 PAPER_SIZES_PX = {
@@ -54,7 +30,21 @@ def limpiar_nombre_archivo(texto):
     texto_limpio = re.sub(r'[^\w-]', '', texto_limpio)
     return texto_limpio[:50]
 
+# --- MENÚ Y NAVEGACIÓN ---
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/estandar')
+def generador_estandar():
+    return render_template('cartel_estandar.html')
+
+@app.route('/datamatrix')
+def generador_datamatrix():
+    return render_template('cartel_datamatrix.html')
+
+# --- LÓGICA DE LA APLICACIÓN ---
 
 @app.route('/galeria')
 def galeria():
@@ -82,7 +72,8 @@ def generar_imagen():
 
     try:
         ancho_px, alto_px = PAPER_SIZES_PX.get(size_str, PAPER_SIZES_PX['A4'])
-        if orientacion_str == 'landscape': ancho_px, alto_px = alto_px, ancho_px 
+        if orientacion_str == 'landscape': 
+            ancho_px, alto_px = alto_px, ancho_px 
 
         imagen = Image.new("RGBA", (ancho_px, alto_px), "white")
         dibujo = ImageDraw.Draw(imagen)
@@ -99,8 +90,10 @@ def generar_imagen():
             alto_logo = int(alto_px * 0.1)
             proporcion = alto_logo / float(logo.size[1])
             ancho_logo = int(float(logo.size[0]) * float(proporcion))
-            try: resample_method = Image.Resampling.LANCZOS
-            except AttributeError: resample_method = Image.LANCZOS
+            try: 
+                resample_method = Image.Resampling.LANCZOS
+            except AttributeError: 
+                resample_method = Image.LANCZOS
             logo = logo.resize((ancho_logo, alto_logo), resample_method)
             
             margin_x = int(ancho_px * 0.04)
