@@ -8,24 +8,28 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A3, A4, A5, landscape, portrait
 from reportlab.lib.utils import ImageReader
 
-from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# 1. El Hub Principal (el código de arriba)
+# Menú principal
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# 2. Tu herramienta antigua (mueve tu lógica anterior aquí)
+# Herramienta original
 @app.route('/estandar')
 def generador_estandar():
-    return render_template('tu_pagina_vieja.html')
+    return render_template('cartel_estandar.html')
 
-# 3. La nueva herramienta que hicimos hoy
+# Herramienta nueva
 @app.route('/datamatrix')
 def generador_datamatrix():
     return render_template('cartel_datamatrix.html')
+
+# Galería (que vi que tenías en tu repositorio)
+@app.route('/galeria')
+def galeria():
+    return render_template('galeria.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
