@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Carteles Data Matrix</title>
+    <!-- Librería para generar el Data Matrix -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bwip-js/3.4.0/bwip-js-min.js"></script>
+    <style>
+        /* Estilos de la interfaz de control */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; padding: 20px; }
+        .controls { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .controls input, .controls select, .controls button { padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+        .controls button { background-color: #002b5e; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .controls button:hover { background-color: #001a38; }
+
+        /* Contenedor principal del cartel */
+        #cartel-container {
+            background: white;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Detalle decorativo rojo en la esquina inferior izquierda (como en la foto) */
+        #cartel-container::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-bottom: 100px solid red;
+            border-right: 40px solid transparent;
+        }
+
+        /* Tamaños de hoja estándar (en milímetros) */
+        .size-a3 { width: 297mm; height: 420mm; }
+        .size-a4 { width: 210mm; height: 297mm; }
+        .size-a5 { width: 148mm; height: 210mm; }
+
+        /* Orientación Horizontal (intercambia ancho y alto) */
+        .landscape.size-a3 { width: 420mm; height: 297mm; }
+        .landscape.size-a4 { width: 297mm; height: 210mm; }
+        .landscape.size-a5 { width: 210mm; height: 148mm; }
+
+        /* Estilos del texto y del código */
+        .text-value { font-size: 120px; font-weight: bold; margin-bottom: 30px; text-transform: uppercase; color: #000; font-family: Arial, sans-serif; }
+        
+        /* Posicionamiento del logo de la empresa */
+        .logo { position: absolute; bottom: 30px; right: 30px; width: 250px; }
+
+        /* Reglas exclusivas para cuando presiones "Imprimir" */
+        @media print {
+            body { padding: 0; background: white; }
+            .controls { display: none; /* Oculta los botones al imprimir */ }
+            #cartel-container { box-shadow: none; margin: 0; }
+            
+            /* Ajuste dinámico de la página para la impresora */
+            @page { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Panel de Configuración -->
+<div class="controls">
+    <label>Valor: <input type="text" id="codeValue" value="200PACK" oninput="generarCartel()"></label>
+    <label>Tamaño: 
+        <select id="pageSize" onchange="generarCartel()">
+            <option value="size-a4">A4</option>
+            <option value="size-a3">A3</option>
+            <option value="size-a5">A5</option>
+        </select>
+    </label>
+    <label>Orientación: 
+        <select id="orientation" onchange="generarCartel()">
+            <option value="landscape">Horizontal</option>
+            <option value="portrait">Vertical</option>
+        </select>
+    </label>
+    <button onclick="window.print()">🖨️ Imprimir Cartel</button>
+</div>
+
+<!-- Área del Cartel que será impresa -->
+<div id="cartel-container" class="size-a4 landscape">
+    <div class="text-value" id="displayText">200PACK</div>
+    <canvas id="datamatrixCanvas"></canvas>
+    
+    <!-- Aquí colocas la ruta al logo de tu empresa. Usa una imagen en PNG o SVG preferentemente -->
+    <img src="ruta_a_tu_logo.png" alt="Logo Empresa" class="logo">
+</div>
+
+<script>
+    function generarCartel() {
+        const value = document.getElementById('codeValue').value;
+        const size = document.getElementById('pageSize').value;
+        const orientation = document.getElementById('orientation').value;
+        const container = document.getElementById('cartel-container');
+        const textElement = document.getElementById('displayText');
+
+        // 1. Actualizar clases de tamaño y orientación en el CSS
+        container.className = `${size} ${orientation}`;
+
+        // 2. Actualizar el texto superior
+        textElement.innerText = value;
+
+        // 3. Ajustar el tamaño del Data Matrix y el texto dinámicamente según la hoja
+        let codeScale = 12; // Escala por defecto para A4
+        let fontSize = 120; // Tamaño de fuente para A4
+
+        if (size === 'size-a3') {
+            codeScale = 18;
+            fontSize = 180;
+        } else if (size === 'size-a5') {
+            codeScale = 8;
+            fontSize = 80;
+        }
+
+        textElement.style.fontSize = `${fontSize}px`;
+
+        // 4. Generar el código Data Matrix en el canvas
+        try {
+            bwipjs.toCanvas('datamatrixCanvas', {
+                bcid:        'datamatrix', // Tipo de código de barras
+                text:        value,        // El valor introducido
+                scale:       codeScale,    // La escala calculada
+                padding:     5             // Margen de seguridad interno
+            });
+        } catch (e) {
+            console.error('Error al generar el Data Matrix:', e);
+        }
+    }
+
+    // Disparar la generación del primer cartel al cargar la página
+    window.onload = generarCartel;
+</script>
+
+</body>
+</html>
