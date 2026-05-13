@@ -8,7 +8,27 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A3, A4, A5, landscape, portrait
 from reportlab.lib.utils import ImageReader
 
+from flask import Flask, render_template
+
 app = Flask(__name__)
+
+# 1. El Hub Principal (el código de arriba)
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# 2. Tu herramienta antigua (mueve tu lógica anterior aquí)
+@app.route('/estandar')
+def generador_estandar():
+    return render_template('tu_pagina_vieja.html')
+
+# 3. La nueva herramienta que hicimos hoy
+@app.route('/datamatrix')
+def generador_datamatrix():
+    return render_template('cartel_datamatrix.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 # Diccionario de tamaños de papel a 300 DPI (Píxeles: Ancho, Alto para orientación Vertical/Portrait)
 PAPER_SIZES_PX = {
@@ -30,15 +50,7 @@ def limpiar_nombre_archivo(texto):
     texto_limpio = re.sub(r'[^\w-]', '', texto_limpio)
     return texto_limpio[:50]
 
-# Tu código original que ya funcionaba
-@app.route('/')
-def generador_clasico():
-    return render_template('index.html') # Tu página anterior no se toca
 
-# La nueva funcionalidad opcional
-@app.route('/datamatrix')
-def generador_datamatrix():
-    return render_template('cartel_datamatrix.html')
 
 @app.route('/galeria')
 def galeria():
